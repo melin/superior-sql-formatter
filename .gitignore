@@ -1,0 +1,8 @@
+# Created by .ignore support plugin (hsz.mobi)
+target
+.idea
+superior-sql-formatter.iml
+metastore_db
+derby.log
+.DS_Store
+gen
