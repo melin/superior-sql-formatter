@@ -3,7 +3,7 @@ package com.github.melin.superior.sql.formatter.spark
 import org.junit.Assert
 import org.junit.Test
 
-class SparkSqlFormatterTest {
+class SparkDmlSqlFormatterTest {
 
     @Test
     fun simpleSelectSqlTest() {
