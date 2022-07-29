@@ -32,6 +32,24 @@ class SparkSqlFormatterTest {
     }
 
     @Test
+    fun subQuerySqlTest() {
+        val sql = "select d.name, d.test from (select * from demo) t"
+        val formatSql = SparkSqlFormatter.formatSql(sql)
+        val expected = """
+            |SELECT
+            |  d.name,
+            |  d.test
+            |FROM
+            |  (
+            |    SELECT *
+            |    FROM
+            |      demo
+            |  ) t
+        """.trimMargin()
+        Assert.assertEquals(expected, formatSql)
+    }
+
+    @Test
     fun joinSelectSqlTest() {
         val sql = """
             SELECT * FROM demo1 as t1

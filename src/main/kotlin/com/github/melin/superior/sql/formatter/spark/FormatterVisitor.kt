@@ -2,6 +2,7 @@ package com.github.melin.superior.sql.formatter.spark
 
 import com.github.melin.superior.sql.formatter.spark.SparkSqlParser.NamedExpressionContext
 import com.github.melin.superior.sql.formatter.spark.SparkSqlParser.SetQuantifierContext
+import com.github.melin.superior.sql.formatter.spark.SparkSqlParser.TableNameContext
 import com.google.common.base.Strings
 import com.google.common.collect.Iterables
 import org.antlr.v4.runtime.tree.TerminalNodeImpl
@@ -26,9 +27,15 @@ class FormatterVisitor(val builder: StringBuilder) : SparkSqlParserBaseVisitor<V
     }
 
     override fun visitFromClause(ctx: SparkSqlParser.FromClauseContext): Void? {
-        append(indent, "FROM")
-        append(indent, "\n", INDENT)
-        return super.visitFromClause(ctx)
+        ctx.children.forEach { child ->
+            if (child is TerminalNodeImpl) {
+                append(indent, "FROM", "\n")
+            } else {
+                return visit(child)
+            }
+        }
+
+        return null
     }
 
     override fun visitJoinRelation(ctx: SparkSqlParser.JoinRelationContext): Void? {
@@ -72,11 +79,33 @@ class FormatterVisitor(val builder: StringBuilder) : SparkSqlParserBaseVisitor<V
     }
 
     override fun visitRelation(ctx: SparkSqlParser.RelationContext): Void? {
-        return super.visitRelation(ctx)
+        ctx.children.forEach { child ->
+            if (child is TableNameContext) {
+                append(indent, INDENT)
+            }
+
+            visit(child)
+        }
+        return null
+    }
+
+    override fun visitAliasedQuery(ctx: SparkSqlParser.AliasedQueryContext): Void? {
+        builder.append(INDENT).append("(").append("\n")
+
+        indent += 2
+        visit(ctx.getChild(1)) // sub query sql
+        indent -= 2
+
+        append(indent, "\n", INDENT)
+        builder.append(")")
+
+        visit(ctx.getChild(3)) // alias name
+
+        return null
     }
 
     override fun visitTableAlias(ctx: SparkSqlParser.TableAliasContext): Void? {
-        ctx.children.forEach { child ->
+        ctx.children?.forEach { child ->
             if (child is TerminalNodeImpl) {
                 builder.append(" ").append(child.text.uppercase())
             } else {
