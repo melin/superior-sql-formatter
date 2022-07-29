@@ -115,6 +115,49 @@ class FormatterVisitor(val builder: StringBuilder) : SparkSqlParserBaseVisitor<V
         return null;
     }
 
+    override fun visitQueryOrganization(ctx: SparkSqlParser.QueryOrganizationContext): Void? {
+        if (ctx.children == null) {
+            return null
+        }
+
+        builder.append("\n")
+        append(indent)
+
+        var first = true
+        ctx.children?.forEach { child ->
+            if (child is TerminalNodeImpl) {
+                val text = child.text.uppercase()
+                if (!",".equals(text)) { // 处理orderby 多个字段
+                    if (first) {
+                        first = false
+                    } else {
+                        builder.append(" ")
+                    }
+                    builder.append(text)
+                }
+            } else {
+                visit(child)
+            }
+        }
+
+        return null;
+    }
+
+    override fun visitSortItem(ctx: SparkSqlParser.SortItemContext): Void? {
+        builder.append("\n")
+        append(indent, INDENT)
+
+        ctx.children.forEach { child ->
+            if (child is TerminalNodeImpl) {
+                builder.append(" ").append(child.text.uppercase())
+            } else {
+                visit(child)
+            }
+        }
+
+        return null;
+    }
+
     override fun visitNamedExpressionSeq(ctx: SparkSqlParser.NamedExpressionSeqContext): Void? {
         if (ctx.childCount > 1) {
             ctx.children.forEach { child ->
@@ -161,6 +204,10 @@ class FormatterVisitor(val builder: StringBuilder) : SparkSqlParserBaseVisitor<V
     override fun visitStar(ctx: SparkSqlParser.StarContext): Void? {
         builder.append(ctx.text)
         return null;
+    }
+
+    private fun append(indent: Int): java.lang.StringBuilder? {
+        return builder.append(indentString(indent))
     }
 
     private fun append(indent: Int, value: String): java.lang.StringBuilder? {

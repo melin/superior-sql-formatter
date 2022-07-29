@@ -7,12 +7,17 @@ class SparkDmlSqlFormatterTest {
 
     @Test
     fun simpleSelectSqlTest() {
-        val sql = "select distinct name from users"
+        val sql = "SELECT name, age FROM person ORDER BY age DESC, name asc NULLS FIRST;"
         val formatSql = SparkSqlFormatter.formatSql(sql)
         val expected = """
-            |SELECT DISTINCT name
+            |SELECT
+            |  name,
+            |  age
             |FROM
-            |  users
+            |  person
+            |ORDER BY
+            |  age DESC
+            |  name ASC NULLS FIRST
         """.trimMargin()
         Assert.assertEquals(expected, formatSql)
     }
