@@ -16,7 +16,7 @@ class SparkDmlSqlFormatterTest {
             |FROM
             |  person
             |ORDER BY
-            |  age DESC
+            |  age DESC,
             |  name ASC NULLS FIRST
         """.trimMargin()
         Assert.assertEquals(expected, formatSql)
@@ -32,6 +32,75 @@ class SparkDmlSqlFormatterTest {
             |  age
             |FROM
             |  users AS t
+        """.trimMargin()
+        Assert.assertEquals(expected, formatSql)
+    }
+
+    @Test
+    fun simpleSelectGroupSqlTest1() {
+        val sql = "SELECT id, sum(quantity) FILTER (WHERE car_model IN ('Honda Civic', 'Honda CRV')) AS `sum(quantity)` " +
+                "FROM dealer GROUP BY id ORDER BY id;"
+        val formatSql = SparkSqlFormatter.formatSql(sql)
+        val expected = """
+            |SELECT
+            |  id,
+            |  sum(quantity) FILTER (
+            |    WHERE
+            |      car_model IN ('Honda Civic', 'Honda CRV')
+            |  ) AS `sum(quantity)`
+            |FROM
+            |  dealer
+            |GROUP BY
+            |  id
+            |ORDER BY
+            |  id
+        """.trimMargin()
+        Assert.assertEquals(expected, formatSql)
+    }
+
+    @Test
+    fun simpleSelectGroupSqlTest2() {
+        val sql = "SELECT city, car_model, sum(quantity) AS sum FROM dealer " +
+                "GROUP BY GROUPING SETS ((city, car_model), (city), (car_model), ()) ORDER BY city"
+        val formatSql = SparkSqlFormatter.formatSql(sql)
+        val expected = """
+            |SELECT
+            |  city,
+            |  car_model,
+            |  sum(quantity) AS sum
+            |FROM
+            |  dealer
+            |GROUP BY
+            |  GROUPING SETS (
+            |    (city, car_model),
+            |    (city),
+            |    (car_model),
+            |    ()
+            |  )
+            |ORDER BY
+            |  city
+        """.trimMargin()
+        Assert.assertEquals(expected, formatSql)
+    }
+
+    @Test
+    fun simpleSelectGroupSqlTest3() {
+        val sql = "SELECT city, car_model, sum(quantity) AS sum FROM dealer " +
+                "GROUP BY city, car_model WITH ROLLUP ORDER BY city, car_model;"
+        val formatSql = SparkSqlFormatter.formatSql(sql)
+        val expected = """
+            |SELECT
+            |  city,
+            |  car_model,
+            |  sum(quantity) AS sum
+            |FROM
+            |  dealer
+            |GROUP BY
+            |  city,
+            |  car_model WITH ROLLUP
+            |ORDER BY
+            |  city,
+            |  car_model
         """.trimMargin()
         Assert.assertEquals(expected, formatSql)
     }
