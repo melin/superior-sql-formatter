@@ -24,7 +24,7 @@ class SparkDmlSqlFormatterTest {
 
     @Test
     fun simpleSelectSqlTest1() {
-        val sql = "select distinct name, age from users as t"
+        val sql = "select distinct name, age from users as t;"
         val formatSql = SparkSqlFormatter.formatSql(sql)
         val expected = """
             |SELECT DISTINCT
@@ -32,6 +32,23 @@ class SparkDmlSqlFormatterTest {
             |  age
             |FROM
             |  users AS t
+        """.trimMargin()
+        Assert.assertEquals(expected, formatSql)
+    }
+
+    @Test
+    fun simpleSelectSqlTest2() {
+        val sql = "select date '2022-12-12' as test, name from demo where name = 'ss' and id>100"
+        val formatSql = SparkSqlFormatter.formatSql(sql)
+        val expected = """
+            |SELECT
+            |  date '2022-12-12' AS test,
+            |  name
+            |FROM
+            |  demo
+            |WHERE
+            |  name = 'ss'
+            |  AND id > 100
         """.trimMargin()
         Assert.assertEquals(expected, formatSql)
     }

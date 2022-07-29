@@ -3,8 +3,10 @@ package com.github.melin.superior.sql.formatter.spark
 import com.github.melin.superior.sql.formatter.spark.SparkSqlParser.ExpressionContext
 import com.github.melin.superior.sql.formatter.spark.SparkSqlParser.GroupingAnalyticsContext
 import com.github.melin.superior.sql.formatter.spark.SparkSqlParser.NamedExpressionContext
+import com.github.melin.superior.sql.formatter.spark.SparkSqlParser.NumericLiteralContext
 import com.github.melin.superior.sql.formatter.spark.SparkSqlParser.QuotedIdentifierAlternativeContext
 import com.github.melin.superior.sql.formatter.spark.SparkSqlParser.SetQuantifierContext
+import com.github.melin.superior.sql.formatter.spark.SparkSqlParser.StringLiteralContext
 import com.github.melin.superior.sql.formatter.spark.SparkSqlParser.TableNameContext
 import com.google.common.base.Strings
 import com.google.common.collect.Iterables
@@ -79,6 +81,39 @@ class FormatterVisitor(val builder: StringBuilder) : SparkSqlParserBaseVisitor<V
 
     override fun visitPredicate(ctx: SparkSqlParser.PredicateContext): Void? {
         return super.visitPredicate(ctx)
+    }
+
+    override fun visitWhereClause(ctx: SparkSqlParser.WhereClauseContext): Void? {
+        builder.append("\n")
+        ctx.children.forEach { child ->
+            if (child is TerminalNodeImpl) {
+                append(indent, "WHERE", "\n")
+            } else {
+                indent++
+                visit(child)
+                indent--
+            }
+        }
+
+        return null;
+    }
+
+    override fun visitLogicalBinary(ctx: SparkSqlParser.LogicalBinaryContext): Void? {
+        var first = true
+        ctx.children.forEach { child ->
+            if (child is TerminalNodeImpl) {
+                builder.append("\n")
+                append(indent, child.text.uppercase(), " ")
+            } else {
+                if (first) {
+                    append(indent)
+                    first = false
+                }
+                visit(child)
+            }
+        }
+
+        return null;
     }
 
     override fun visitRelation(ctx: SparkSqlParser.RelationContext): Void? {
@@ -328,6 +363,18 @@ class FormatterVisitor(val builder: StringBuilder) : SparkSqlParserBaseVisitor<V
         return null;
     }
 
+    override fun visitTypeConstructor(ctx: SparkSqlParser.TypeConstructorContext): Void? {
+        ctx.children.forEach { child ->
+            if (child is TerminalNodeImpl) {
+                builder.append(" ").append(child.text)
+            } else {
+                visit(child)
+            }
+        }
+
+        return null;
+    }
+
     override fun visitIdentifier(ctx: SparkSqlParser.IdentifierContext): Void? {
         var child = ctx.getChild(0)
         if (child is QuotedIdentifierAlternativeContext) {
@@ -335,6 +382,22 @@ class FormatterVisitor(val builder: StringBuilder) : SparkSqlParserBaseVisitor<V
         } else {
             builder.append(ctx.text)
         }
+        return null;
+    }
+
+    override fun visitConstantDefault(ctx: SparkSqlParser.ConstantDefaultContext): Void? {
+        ctx.children.forEach { child ->
+            if (child is TerminalNodeImpl) {
+                builder.append(child.text)
+            } else if (child is StringLiteralContext) {
+                builder.append(child.text)
+            } else if (child is NumericLiteralContext) {
+                builder.append(child.text)
+            } else {
+                visit(child)
+            }
+        }
+
         return null;
     }
 
