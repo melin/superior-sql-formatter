@@ -7,6 +7,7 @@ import com.github.melin.superior.sql.formatter.spark.SparkSqlParser.NumericLiter
 import com.github.melin.superior.sql.formatter.spark.SparkSqlParser.PredicateContext
 import com.github.melin.superior.sql.formatter.spark.SparkSqlParser.QuotedIdentifierAlternativeContext
 import com.github.melin.superior.sql.formatter.spark.SparkSqlParser.SetQuantifierContext
+import com.github.melin.superior.sql.formatter.spark.SparkSqlParser.StatementDefaultContext
 import com.github.melin.superior.sql.formatter.spark.SparkSqlParser.StringLiteralContext
 import com.github.melin.superior.sql.formatter.spark.SparkSqlParser.TableNameContext
 import com.google.common.base.Strings
@@ -24,6 +25,23 @@ class FormatterVisitor(val builder: StringBuilder) : SparkSqlParserBaseVisitor<V
     override fun visitSelectClause(ctx: SparkSqlParser.SelectClauseContext): Void? {
         append(indent, "SELECT")
         return super.visitSelectClause(ctx)
+    }
+
+    override fun visitQuery(ctx: SparkSqlParser.QueryContext): Void? {
+        if (!(ctx.parent is StatementDefaultContext)) {
+            builder.append("\n")
+            indent++
+        }
+
+        super.visitQuery(ctx)
+
+        if (!(ctx.parent is StatementDefaultContext)) {
+            builder.append("\n")
+            indent--
+            append(indent)
+        }
+
+        return null
     }
 
     override fun visitSetQuantifier(ctx: SetQuantifierContext): Void? {
@@ -109,19 +127,35 @@ class FormatterVisitor(val builder: StringBuilder) : SparkSqlParserBaseVisitor<V
                 append(indent, child.text.uppercase(), " ")
             } else {
                 if (first) {
-                    append(indent)
                     first = false
+                    visit(child)
+                } else {
+                    val originIndex = indent
+                    indent = 0
+                    visit(child)
+                    indent = originIndex
                 }
-                visit(child)
             }
         }
 
         return null;
     }
 
+    override fun visitComparison(ctx: SparkSqlParser.ComparisonContext): Void? {
+        var first = true
+        ctx.children.forEach { child ->
+            if (first) {
+                append(indent)
+                first = false
+            }
+            visit(child)
+        }
+        return null
+    }
+
     override fun visitPredicated(ctx: SparkSqlParser.PredicatedContext): Void? {
         if (ctx.predicate() != null) {
-            append(indent, INDENT)
+            append(indent)
             visit(ctx.getChild(0))
             builder.append(" ")
             (ctx.getChild(1) as PredicateContext).children.forEach { child ->
@@ -162,14 +196,25 @@ class FormatterVisitor(val builder: StringBuilder) : SparkSqlParserBaseVisitor<V
         return null
     }
 
+    override fun visitMultipartIdentifier(ctx: SparkSqlParser.MultipartIdentifierContext): Void? {
+        ctx.children.forEach { child ->
+            if (child is TerminalNodeImpl) {
+                builder.append(child.text)
+            } else {
+                visit(child)
+            }
+        }
+        return null
+    }
+
     override fun visitAliasedQuery(ctx: SparkSqlParser.AliasedQueryContext): Void? {
-        builder.append(INDENT).append("(").append("\n")
+        builder.append(INDENT).append("(")
 
-        indent += 2
+        indent += 1
         visit(ctx.getChild(1)) // sub query sql
-        indent -= 2
+        indent -= 1
 
-        append(indent, "\n", INDENT)
+        append(indent)
         builder.append(")")
 
         visit(ctx.getChild(3)) // alias name
@@ -374,10 +419,10 @@ class FormatterVisitor(val builder: StringBuilder) : SparkSqlParserBaseVisitor<V
             builder.append(" FILTER (").append("\n")
             indent ++
             append(indent, INDENT, "WHERE")
-            indent ++
+            indent +=2
             builder.append("\n")
             visit(ctx.where)
-            indent -= 2
+            indent -= 3
             builder.append("\n")
             append(indent, INDENT, ")")
         }

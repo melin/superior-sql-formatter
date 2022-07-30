@@ -157,4 +157,30 @@ class SparkDmlSqlFormatterTest {
         """.trimMargin()
         Assert.assertEquals(expected, formatSql)
     }
+
+    @Test
+    fun inSubQuerySqlTest() {
+        val sql = """
+            SELECT * FROM sales.orders WHERE customer_id IN (SELECT customer_id FROM sales.customers WHERE city = 'San Jose')
+            ORDER BY customer_id, order_date
+        """.trimIndent()
+        val formatSql = SparkSqlFormatter.formatSql(sql)
+        val expected = """
+            |SELECT *
+            |FROM
+            |  sales.orders
+            |WHERE
+            |  customer_id IN (
+            |    SELECT customer_id
+            |    FROM
+            |      sales.customers
+            |    WHERE
+            |      city = 'San Jose'
+            |  )
+            |ORDER BY
+            |  customer_id,
+            |  order_date
+        """.trimMargin()
+        Assert.assertEquals(expected, formatSql)
+    }
 }
