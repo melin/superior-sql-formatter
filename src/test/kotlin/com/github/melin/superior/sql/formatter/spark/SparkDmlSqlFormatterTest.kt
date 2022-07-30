@@ -183,4 +183,31 @@ class SparkDmlSqlFormatterTest {
         """.trimMargin()
         Assert.assertEquals(expected, formatSql)
     }
+
+    @Test
+    fun existsSubQuerySqlTest() {
+        val sql = """
+            SELECT * FROM sales.orders o WHERE EXISTS (SELECT customer_id FROM sales.customers c WHERE o.customer_id = c.customer_id AND city = 'San Jose')
+            ORDER BY o.customer_id, order_date
+        """.trimIndent()
+        val formatSql = SparkSqlFormatter.formatSql(sql)
+        val expected = """
+            |SELECT *
+            |FROM
+            |  sales.orders o
+            |WHERE
+            |  EXISTS (
+            |    SELECT customer_id
+            |    FROM
+            |      sales.customers c
+            |    WHERE
+            |      o.customer_id = c.customer_id
+            |      AND city = 'San Jose'
+            |  )
+            |ORDER BY
+            |  o.customer_id,
+            |  order_date
+        """.trimMargin()
+        Assert.assertEquals(expected, formatSql)
+    }
 }

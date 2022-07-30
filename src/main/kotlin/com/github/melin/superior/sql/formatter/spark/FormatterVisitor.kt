@@ -153,6 +153,14 @@ class FormatterVisitor(val builder: StringBuilder) : SparkSqlParserBaseVisitor<V
         return null
     }
 
+    override fun visitExists(ctx: SparkSqlParser.ExistsContext): Void? {
+        builder.append(INDENT).append("EXISTS (")
+        visit(ctx.getChild(2)) // sub query sq
+        builder.append(")")
+
+        return null
+     }
+
     override fun visitPredicated(ctx: SparkSqlParser.PredicatedContext): Void? {
         if (ctx.predicate() != null) {
             append(indent)
