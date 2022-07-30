@@ -1,5 +1,6 @@
 package com.github.melin.superior.sql.formatter.spark
 
+import com.github.melin.superior.sql.formatter.spark.SparkSqlParser.CreateTableContext
 import com.github.melin.superior.sql.formatter.spark.SparkSqlParser.ExpressionContext
 import com.github.melin.superior.sql.formatter.spark.SparkSqlParser.GroupingAnalyticsContext
 import com.github.melin.superior.sql.formatter.spark.SparkSqlParser.NamedExpressionContext
@@ -28,17 +29,60 @@ class FormatterVisitor(val builder: StringBuilder) : SparkSqlParserBaseVisitor<V
     }
 
     override fun visitQuery(ctx: SparkSqlParser.QueryContext): Void? {
-        if (!(ctx.parent is StatementDefaultContext)) {
+        if (!(ctx.parent is StatementDefaultContext || ctx.parent is CreateTableContext)) {
             builder.append("\n")
             indent++
         }
 
         super.visitQuery(ctx)
 
-        if (!(ctx.parent is StatementDefaultContext)) {
+        if (!(ctx.parent is StatementDefaultContext || ctx.parent is CreateTableContext)) {
             builder.append("\n")
             indent--
             append(indent)
+        }
+
+        return null
+    }
+
+    override fun visitCreateTable(ctx: SparkSqlParser.CreateTableContext): Void? {
+        ctx.children.forEach { child ->
+            if (child is TerminalNodeImpl) {
+                val text = child.text.uppercase()
+                if ("AS".equals(text)) {
+                    builder.append(text).append("\n")
+                } else {
+                    builder.append(text).append(" ")
+                }
+            } else {
+                visit(child)
+            }
+        }
+
+        return null
+    }
+
+    override fun visitCreateTableHeader(ctx: SparkSqlParser.CreateTableHeaderContext): Void? {
+        ctx.children.forEach { child ->
+            if (child is TerminalNodeImpl) {
+                builder.append(child.text.uppercase()).append(" ")
+            } else {
+                visit(child)
+                builder.append(" ")
+            }
+        }
+
+        return null
+    }
+
+    override fun visitTableProvider(ctx: SparkSqlParser.TableProviderContext): Void? {
+        ctx.children.forEach { child ->
+            if (child is TerminalNodeImpl) {
+                builder.append(child.text.uppercase()).append(" ")
+            } else {
+                visit(child)
+                builder.append(" ")
+            }
         }
 
         return null
@@ -56,7 +100,7 @@ class FormatterVisitor(val builder: StringBuilder) : SparkSqlParserBaseVisitor<V
             if (child is TerminalNodeImpl) {
                 append(indent, "FROM", "\n")
             } else {
-                return visit(child)
+                visit(child)
             }
         }
 
