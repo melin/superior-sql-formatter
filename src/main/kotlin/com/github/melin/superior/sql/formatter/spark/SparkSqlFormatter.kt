@@ -9,7 +9,7 @@ import org.antlr.v4.runtime.CommonTokenStream
 import org.antlr.v4.runtime.atn.PredictionMode
 import org.apache.commons.lang3.StringUtils
 
-object SparkSelectSqlFormatter {
+object SparkSqlFormatter {
 
     fun formatSql(sql: String): String? {
         val trimSql = StringUtils.trim(sql)
