@@ -143,10 +143,6 @@ class FormatterVisitor(val builder: StringBuilder) : SparkSqlParserBaseVisitor<V
         return null
     }
 
-    override fun visitPredicate(ctx: SparkSqlParser.PredicateContext): Void? {
-        return super.visitPredicate(ctx)
-    }
-
     override fun visitWhereClause(ctx: SparkSqlParser.WhereClauseContext): Void? {
         builder.append("\n")
         ctx.children.forEach { child ->
@@ -210,23 +206,36 @@ class FormatterVisitor(val builder: StringBuilder) : SparkSqlParserBaseVisitor<V
         builder.append(")")
 
         return null
-     }
+    }
+
+    override fun visitPredicate(ctx: SparkSqlParser.PredicateContext): Void? {
+        ctx.children.forEach { child ->
+            if (child is TerminalNodeImpl) {
+                val text = child.text.uppercase()
+                if (!")".equals(text) && !",".equals(text)) {
+                    builder.append(" ")
+                }
+                builder.append(text)
+                if (",".equals(text)) { // in 多个值，逗号后有空格
+                    builder.append(" ")
+                }
+            } else {
+                val kind = ctx.kind.text.uppercase()
+                if (!"IN".equals(kind)) {
+                    builder.append(" ")
+                }
+
+                visit(child)
+            }
+        }
+
+        return null;
+    }
 
     override fun visitPredicated(ctx: SparkSqlParser.PredicatedContext): Void? {
         if (ctx.predicate() != null) {
             visit(ctx.getChild(0))
-            builder.append(" ")
-            (ctx.getChild(1) as PredicateContext).children.forEach { child ->
-                if (child is TerminalNodeImpl) {
-                    val text = child.text
-                    builder.append(child.text)
-                    if (!"(".equals(text) && !")".equals(text)) {
-                        builder.append(" ")
-                    }
-                } else {
-                    visit(child)
-                }
-            }
+            visit(ctx.getChild(1))
         } else {
             ctx.children.forEach { child ->
                 if (child is TerminalNodeImpl) {
