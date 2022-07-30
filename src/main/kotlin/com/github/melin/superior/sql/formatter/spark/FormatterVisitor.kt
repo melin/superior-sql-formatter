@@ -110,6 +110,7 @@ class FormatterVisitor(val builder: StringBuilder) : SparkSqlParserBaseVisitor<V
                 append(indent, "WHERE", "\n")
             } else {
                 indent++
+                append(indent)
                 visit(child)
                 indent--
             }
@@ -145,7 +146,6 @@ class FormatterVisitor(val builder: StringBuilder) : SparkSqlParserBaseVisitor<V
         var first = true
         ctx.children.forEach { child ->
             if (first) {
-                append(indent)
                 first = false
             }
             visit(child)
@@ -153,8 +153,15 @@ class FormatterVisitor(val builder: StringBuilder) : SparkSqlParserBaseVisitor<V
         return null
     }
 
+    override fun visitLogicalNot(ctx: SparkSqlParser.LogicalNotContext): Void? {
+        builder.append("NOT ")
+        visit(ctx.getChild(1)) // sub query sq
+
+        return null
+    }
+
     override fun visitExists(ctx: SparkSqlParser.ExistsContext): Void? {
-        builder.append(INDENT).append("EXISTS (")
+        builder.append("EXISTS (")
         visit(ctx.getChild(2)) // sub query sq
         builder.append(")")
 
@@ -163,7 +170,6 @@ class FormatterVisitor(val builder: StringBuilder) : SparkSqlParserBaseVisitor<V
 
     override fun visitPredicated(ctx: SparkSqlParser.PredicatedContext): Void? {
         if (ctx.predicate() != null) {
-            append(indent)
             visit(ctx.getChild(0))
             builder.append(" ")
             (ctx.getChild(1) as PredicateContext).children.forEach { child ->
@@ -294,7 +300,7 @@ class FormatterVisitor(val builder: StringBuilder) : SparkSqlParserBaseVisitor<V
         ctx.children?.forEach { child ->
             if (child is TerminalNodeImpl) {
                 val text = child.text.uppercase()
-                if (!",".equals(text)) { // 处理orderby 多个字段
+                if (!",".equals(text)) {
                     if (first) {
                         first = false
                     } else {
@@ -410,8 +416,7 @@ class FormatterVisitor(val builder: StringBuilder) : SparkSqlParserBaseVisitor<V
                 if (child is TerminalNodeImpl) {
                     val text = child.text;
                     if (",".equals(text)) {
-                        builder.append(text)
-                        builder.append(" ")
+                        builder.append(text).append(" ")
                     } else if (StringUtils.endsWithIgnoreCase("filter", text)) {
                         return@outside
                     } else {
@@ -429,6 +434,7 @@ class FormatterVisitor(val builder: StringBuilder) : SparkSqlParserBaseVisitor<V
             append(indent, INDENT, "WHERE")
             indent +=2
             builder.append("\n")
+            append(indent)
             visit(ctx.where)
             indent -= 3
             builder.append("\n")
@@ -517,21 +523,21 @@ class FormatterVisitor(val builder: StringBuilder) : SparkSqlParserBaseVisitor<V
         return null;
     }
 
-    private fun append(indent: Int): java.lang.StringBuilder? {
+    private fun append(indent: Int): StringBuilder {
         return builder.append(indentString(indent))
     }
 
-    private fun append(indent: Int, value: String): java.lang.StringBuilder? {
+    private fun append(indent: Int, value: String): StringBuilder {
         return builder.append(indentString(indent))
             .append(value)
     }
 
-    private fun append(indent: Int, value1: String, value2: String): java.lang.StringBuilder? {
+    private fun append(indent: Int, value1: String, value2: String): StringBuilder {
         return builder.append(indentString(indent))
             .append(value1).append(value2)
     }
 
-    private fun indentString(indent: Int): String? {
+    private fun indentString(indent: Int): String {
         return Strings.repeat(INDENT, indent)
     }
 }

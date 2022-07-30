@@ -38,7 +38,7 @@ class SparkDmlSqlFormatterTest {
 
     @Test
     fun simpleSelectSqlTest2() {
-        val sql = "select date '2022-12-12' as test, name from demo where name = 'ss' and id>100"
+        val sql = "select date '2022-12-12' as test, name from demo where not name = 'ss' and id>100"
         val formatSql = SparkSqlFormatter.formatSql(sql)
         val expected = """
             |SELECT
@@ -47,7 +47,7 @@ class SparkDmlSqlFormatterTest {
             |FROM
             |  demo
             |WHERE
-            |  name = 'ss'
+            |  NOT name = 'ss'
             |  AND id > 100
         """.trimMargin()
         Assert.assertEquals(expected, formatSql)
