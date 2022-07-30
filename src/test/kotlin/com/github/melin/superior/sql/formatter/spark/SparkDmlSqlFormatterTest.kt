@@ -55,7 +55,7 @@ class SparkDmlSqlFormatterTest {
 
     @Test
     fun simpleSelectGroupSqlTest1() {
-        val sql = "SELECT id, sum(quantity) FILTER (WHERE car_model IN ('Honda Civic', 'Honda CRV')) AS `sum(quantity)` " +
+        val sql = "SELECT id, sum(quantity) filter (WHERE car_model IN ('Honda Civic', 'Honda CRV')) AS `sum(quantity)` " +
                 "FROM dealer GROUP BY id ORDER BY id;"
         val formatSql = SparkSqlFormatter.formatSql(sql)
         val expected = """
