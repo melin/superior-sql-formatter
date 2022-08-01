@@ -355,6 +355,22 @@ class FormatterVisitor(val builder: StringBuilder) : SparkSqlParserBaseVisitor<V
         return null;
     }
 
+    override fun visitHavingClause(ctx: SparkSqlParser.HavingClauseContext): Void? {
+        builder.append("\n")
+        append(indent)
+        ctx.children.forEach { child ->
+            if (child is TerminalNodeImpl) {
+                builder.append(child.text.uppercase())
+                builder.append("\n")
+            } else {
+                append(indent, INDENT)
+                visit(child)
+            }
+        }
+
+        return null
+    }
+
     override fun visitAggregationClause(ctx: SparkSqlParser.AggregationClauseContext): Void? {
         builder.append("\n")
         append(indent)

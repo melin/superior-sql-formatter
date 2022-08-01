@@ -56,6 +56,42 @@ class SparkQuerySqlFormatterTest {
     }
 
     @Test
+    fun simpleSelectHavingSqlTest0() {
+        val sql = "SELECT city, sum(quantity) AS sum FROM dealer GROUP BY city HAVING city = 'Fremont';"
+        val formatSql = SparkSqlFormatter.formatSql(sql)
+        val expected = """
+            |SELECT
+            |  city,
+            |  sum(quantity) AS sum
+            |FROM
+            |  dealer
+            |GROUP BY
+            |  city
+            |HAVING
+            |  city = 'Fremont'
+        """.trimMargin()
+        Assert.assertEquals(expected, formatSql)
+    }
+
+    @Test
+    fun simpleSelectHavingSqlTest1() {
+        val sql = "SELECT city, sum(quantity) AS sum FROM dealer GROUP BY city HAVING max(quantity) > 15;"
+        val formatSql = SparkSqlFormatter.formatSql(sql)
+        val expected = """
+            |SELECT
+            |  city,
+            |  sum(quantity) AS sum
+            |FROM
+            |  dealer
+            |GROUP BY
+            |  city
+            |HAVING
+            |  max(quantity) > 15
+        """.trimMargin()
+        Assert.assertEquals(expected, formatSql)
+    }
+
+    @Test
     fun simpleSelectGroupSqlTest1() {
         val sql = "SELECT id, sum(quantity) filter (WHERE car_model IN ('Honda Civic', 'Honda CRV')) AS `sum(quantity)` " +
                 "FROM dealer GROUP BY id ORDER BY id;"
