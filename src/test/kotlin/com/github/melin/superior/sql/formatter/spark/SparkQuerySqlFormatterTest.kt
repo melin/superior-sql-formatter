@@ -7,7 +7,7 @@ class SparkQuerySqlFormatterTest {
 
     @Test
     fun simpleSelectSqlTest() {
-        val sql = "SELECT name, age FROM person ORDER BY age DESC, name asc NULLS FIRST;"
+        val sql = "SELECT name, age FROM person ORDER BY age DESC, name asc NULLS FIRST limit all;"
         val formatSql = SparkSqlFormatter.formatSql(sql)
         val expected = """
             |SELECT
@@ -18,13 +18,14 @@ class SparkQuerySqlFormatterTest {
             |ORDER BY
             |  age DESC,
             |  name ASC NULLS FIRST
+            |LIMIT ALL
         """.trimMargin()
         Assert.assertEquals(expected, formatSql)
     }
 
     @Test
     fun simpleSelectSqlTest1() {
-        val sql = "select distinct name, age from users as t;"
+        val sql = "select distinct name, age from users as t limit 10;"
         val formatSql = SparkSqlFormatter.formatSql(sql)
         val expected = """
             |SELECT DISTINCT
@@ -32,6 +33,7 @@ class SparkQuerySqlFormatterTest {
             |  age
             |FROM
             |  users AS t
+            |LIMIT 10
         """.trimMargin()
         Assert.assertEquals(expected, formatSql)
     }

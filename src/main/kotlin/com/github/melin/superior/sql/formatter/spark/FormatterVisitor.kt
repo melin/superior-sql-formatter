@@ -305,26 +305,36 @@ class FormatterVisitor(val builder: StringBuilder) : SparkSqlParserBaseVisitor<V
             return null
         }
 
-        builder.append("\n")
-        append(indent)
-
-        var first = true
-        ctx.children?.forEach { child ->
+        var hasLimit = false
+        ctx.children.forEach { child ->
             if (child is TerminalNodeImpl) {
-                val text = child.text.uppercase()
-                if (!",".equals(text)) { // 处理orderby 多个字段
-                    if (first) {
-                        first = false
-                    } else {
-                        builder.append(" ")
-                    }
-                    builder.append(text)
-                } else {
-                    builder.append(text)
+                if ("LIMIT".equals(child.text.uppercase())) {
+                    hasLimit = true
                 }
-            } else {
-                visit(child)
             }
+        }
+
+        if (ctx.order.size > 0) {
+            builder.append("\n")
+            append(indent)
+            builder.append("ORDER BY")
+            ctx.order.forEachIndexed { index, sortItemContext ->
+                visit(sortItemContext)
+                if (index != (ctx.order.size - 1)) {
+                    builder.append(",")
+                }
+            }
+        }
+
+        if (ctx.limit == null && hasLimit) {
+            builder.append("\n")
+            append(indent)
+            builder.append("LIMIT ALL")
+        } else if (ctx.limit != null) {
+            builder.append("\n")
+            append(indent)
+            builder.append("LIMIT ")
+            visit(ctx.limit.getChild(0))
         }
 
         return null;
