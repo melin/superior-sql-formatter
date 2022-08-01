@@ -58,6 +58,38 @@ class SparkQuerySqlFormatterTest {
     }
 
     @Test
+    fun simpleSelectDistrubuteBySqlTest() {
+        val sql = "SELECT age, name FROM person DISTRIBUTE BY age;"
+        val formatSql = SparkSqlFormatter.formatSql(sql)
+        val expected = """
+            |SELECT
+            |  age,
+            |  name
+            |FROM
+            |  person
+            |DISTRIBUTE BY
+            |  age
+        """.trimMargin()
+        Assert.assertEquals(expected, formatSql)
+    }
+
+    @Test
+    fun simpleSelectClusterBySqlTest() {
+        val sql = "SELECT age, name FROM person CLUSTER BY age;"
+        val formatSql = SparkSqlFormatter.formatSql(sql)
+        val expected = """
+            |SELECT
+            |  age,
+            |  name
+            |FROM
+            |  person
+            |CLUSTER BY
+            |  age
+        """.trimMargin()
+        Assert.assertEquals(expected, formatSql)
+    }
+
+    @Test
     fun simpleSelectHavingSqlTest0() {
         val sql = "SELECT city, sum(quantity) AS sum FROM dealer GROUP BY city HAVING city = 'Fremont';"
         val formatSql = SparkSqlFormatter.formatSql(sql)

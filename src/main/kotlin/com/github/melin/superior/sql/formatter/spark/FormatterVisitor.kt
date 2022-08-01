@@ -338,6 +338,34 @@ class FormatterVisitor(val builder: StringBuilder) : SparkSqlParserBaseVisitor<V
             }
         }
 
+        if (ctx.distributeBy.size > 0) {
+            builder.append("\n")
+            append(indent)
+            builder.append("DISTRIBUTE BY")
+            ctx.distributeBy.forEachIndexed { index, expressionContext ->
+                builder.append("\n")
+                append(indent, INDENT)
+                visit(expressionContext)
+                if (index != (ctx.distributeBy.size - 1)) {
+                    builder.append(",")
+                }
+            }
+        }
+
+        if (ctx.clusterBy.size > 0) {
+            builder.append("\n")
+            append(indent)
+            builder.append("CLUSTER BY")
+            ctx.clusterBy.forEachIndexed { index, expressionContext ->
+                builder.append("\n")
+                append(indent, INDENT)
+                visit(expressionContext)
+                if (index != (ctx.clusterBy.size - 1)) {
+                    builder.append(",")
+                }
+            }
+        }
+
         if (ctx.limit == null && hasLimit) {
             builder.append("\n")
             append(indent)
