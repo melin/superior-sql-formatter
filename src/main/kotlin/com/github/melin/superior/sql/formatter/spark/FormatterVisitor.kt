@@ -326,6 +326,18 @@ class FormatterVisitor(val builder: StringBuilder) : SparkSqlParserBaseVisitor<V
             }
         }
 
+        if (ctx.sort.size > 0) {
+            builder.append("\n")
+            append(indent)
+            builder.append("SORT BY")
+            ctx.sort.forEachIndexed { index, sortItemContext ->
+                visit(sortItemContext)
+                if (index != (ctx.sort.size - 1)) {
+                    builder.append(",")
+                }
+            }
+        }
+
         if (ctx.limit == null && hasLimit) {
             builder.append("\n")
             append(indent)
