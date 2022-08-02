@@ -15,7 +15,49 @@ class FormatterVisitor(val builder: StringBuilder) : SparkSqlParserBaseVisitor<V
 
     override fun visitSelectClause(ctx: SparkSqlParser.SelectClauseContext): Void? {
         append(indent, "SELECT")
-        return super.visitSelectClause(ctx)
+
+        ctx.hints.forEach { hint -> visit(hint) }
+
+        if (ctx.setQuantifier() != null) {
+            visit(ctx.setQuantifier())
+        }
+        visit(ctx.namedExpressionSeq())
+
+        return null
+    }
+
+    override fun visitHint(ctx: HintContext): Void? {
+        builder.append(" /*+ ")
+
+        var first = true
+        ctx.hintStatements.forEach { hint ->
+            if (first) {
+                first = false
+            } else {
+                builder.append(", ")
+            }
+            visit(hint)
+        }
+        builder.append(" */")
+        return null
+    }
+
+    override fun visitHintStatement(ctx: HintStatementContext): Void? {
+        visit(ctx.hintName)
+
+        builder.append("(")
+        var first = true
+        ctx.parameters.forEach { param ->
+            if (first) {
+                first = false
+            } else {
+                builder.append(", ")
+            }
+            visit(param)
+        }
+        builder.append(")")
+
+        return null
     }
 
     override fun visitQuery(ctx: SparkSqlParser.QueryContext): Void? {
