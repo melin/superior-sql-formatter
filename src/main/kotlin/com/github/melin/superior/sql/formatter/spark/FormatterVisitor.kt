@@ -1,16 +1,6 @@
 package com.github.melin.superior.sql.formatter.spark
 
-import com.github.melin.superior.sql.formatter.spark.SparkSqlParser.CreateTableContext
-import com.github.melin.superior.sql.formatter.spark.SparkSqlParser.ExpressionContext
-import com.github.melin.superior.sql.formatter.spark.SparkSqlParser.GroupingAnalyticsContext
-import com.github.melin.superior.sql.formatter.spark.SparkSqlParser.NamedExpressionContext
-import com.github.melin.superior.sql.formatter.spark.SparkSqlParser.NumericLiteralContext
-import com.github.melin.superior.sql.formatter.spark.SparkSqlParser.PredicateContext
-import com.github.melin.superior.sql.formatter.spark.SparkSqlParser.QuotedIdentifierAlternativeContext
-import com.github.melin.superior.sql.formatter.spark.SparkSqlParser.SetQuantifierContext
-import com.github.melin.superior.sql.formatter.spark.SparkSqlParser.StatementDefaultContext
-import com.github.melin.superior.sql.formatter.spark.SparkSqlParser.StringLiteralContext
-import com.github.melin.superior.sql.formatter.spark.SparkSqlParser.TableNameContext
+import com.github.melin.superior.sql.formatter.spark.SparkSqlParser.*
 import com.google.common.base.Strings
 import com.google.common.collect.Iterables
 import org.antlr.v4.runtime.tree.TerminalNodeImpl
@@ -527,6 +517,49 @@ class FormatterVisitor(val builder: StringBuilder) : SparkSqlParserBaseVisitor<V
         builder.append('\n')
 
         return null;
+    }
+
+    override fun visitSearchedCase(ctx: SparkSqlParser.SearchedCaseContext): Void? {
+        builder.append("CASE")
+        indent++
+        super.visitSearchedCase(ctx)
+        indent--
+
+        builder.append("\n")
+        append(indent, INDENT)
+        builder.append("ELSE ")
+        visit(ctx.elseExpression)
+        builder.append(" END")
+
+        return null
+    }
+
+    override fun visitSimpleCase(ctx: SimpleCaseContext): Void? {
+        builder.append("CASE ")
+        visit(ctx.value)
+
+        indent++
+        ctx.whenClause().forEach { visit(it) }
+        indent--
+
+        builder.append("\n")
+        append(indent, INDENT)
+        builder.append("ELSE ")
+        visit(ctx.elseExpression)
+        builder.append(" END")
+
+        return null
+    }
+
+    override fun visitWhenClause(ctx: WhenClauseContext): Void? {
+        builder.append("\n")
+        append(indent, INDENT)
+        builder.append("WHEN ")
+        visit(ctx.condition)
+        builder.append(" ")
+        visit(ctx.result)
+
+        return null
     }
 
     override fun visitFunctionCall(ctx: SparkSqlParser.FunctionCallContext): Void? {

@@ -282,4 +282,55 @@ class SparkQuerySqlFormatterTest {
         """.trimMargin()
         Assert.assertEquals(expected, formatSql)
     }
+
+    @Test
+    fun caseWhenQuerySqlTest() {
+        val sql = """
+            SELECT  user_id,item_id,behavior_type,
+            case when substr(time,1,10)='2014-12-16' then 16 
+            when substr(time,1,10)='2014-12-17' then 17
+            when substr(time,1,10)='2014-12-18' then 18 else 0 end as day from user_test
+        """.trimIndent()
+        val formatSql = SparkSqlFormatter.formatSql(sql)
+        val expected = """
+            |SELECT
+            |  user_id,
+            |  item_id,
+            |  behavior_type,
+            |  CASE
+            |    WHEN substr(time, 1, 10) = '2014-12-16' 16
+            |    WHEN substr(time, 1, 10) = '2014-12-17' 17
+            |    WHEN substr(time, 1, 10) = '2014-12-18' 180
+            |  ELSE 0 END AS day
+            |FROM
+            |  user_test
+        """.trimMargin()
+        Assert.assertEquals(expected, formatSql)
+    }
+
+    @Test
+    fun caseWhenQuerySqlTest1() {
+        val sql = """
+            SELECT OrderID, Quantity,
+            CASE 1=1 
+                WHEN Quantity > 30 THEN 'The quantity is greater than 30'
+                WHEN Quantity = 30 THEN 'The quantity is 30'
+                ELSE 'The quantity is under 30'
+            END AS QuantityText
+            FROM OrderDetails;
+        """.trimIndent()
+        val formatSql = SparkSqlFormatter.formatSql(sql)
+        val expected = """
+            |SELECT
+            |  OrderID,
+            |  Quantity,
+            |  CASE 1 = 1
+            |    WHEN Quantity > 30 'The quantity is greater than 30'
+            |    WHEN Quantity = 30 'The quantity is 30'
+            |  ELSE 'The quantity is under 30' END AS QuantityText
+            |FROM
+            |  OrderDetails
+        """.trimMargin()
+        Assert.assertEquals(expected, formatSql)
+    }
 }
