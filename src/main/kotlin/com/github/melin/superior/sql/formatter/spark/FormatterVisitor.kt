@@ -522,7 +522,7 @@ class FormatterVisitor(val builder: StringBuilder) : SparkSqlParserBaseVisitor<V
     override fun visitSearchedCase(ctx: SparkSqlParser.SearchedCaseContext): Void? {
         builder.append("CASE")
         indent++
-        super.visitSearchedCase(ctx)
+        ctx.whenClause().forEach { visit(it) }
         indent--
 
         builder.append("\n")

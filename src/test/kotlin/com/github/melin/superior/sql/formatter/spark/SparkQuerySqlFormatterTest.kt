@@ -300,7 +300,7 @@ class SparkQuerySqlFormatterTest {
             |  CASE
             |    WHEN substr(time, 1, 10) = '2014-12-16' 16
             |    WHEN substr(time, 1, 10) = '2014-12-17' 17
-            |    WHEN substr(time, 1, 10) = '2014-12-18' 180
+            |    WHEN substr(time, 1, 10) = '2014-12-18' 18
             |  ELSE 0 END AS day
             |FROM
             |  user_test
