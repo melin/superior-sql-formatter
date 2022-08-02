@@ -88,7 +88,7 @@ class FormatterVisitor(val builder: StringBuilder) : SparkSqlParserBaseVisitor<V
     override fun visitFromClause(ctx: SparkSqlParser.FromClauseContext): Void? {
         ctx.children.forEach { child ->
             if (child is TerminalNodeImpl) {
-                append(indent, "FROM", "\n")
+                append(indent, "FROM")
             } else {
                 visit(child)
             }
@@ -243,8 +243,12 @@ class FormatterVisitor(val builder: StringBuilder) : SparkSqlParserBaseVisitor<V
     }
 
     override fun visitRelation(ctx: SparkSqlParser.RelationContext): Void? {
+        var first = true
         ctx.children.forEach { child ->
-            if (child is TableNameContext) {
+            if (first) {
+                first = false
+                builder.append(" ")
+            } else if (child is TableNameContext) {
                 append(indent, INDENT)
             }
 
@@ -265,7 +269,7 @@ class FormatterVisitor(val builder: StringBuilder) : SparkSqlParserBaseVisitor<V
     }
 
     override fun visitAliasedQuery(ctx: SparkSqlParser.AliasedQueryContext): Void? {
-        builder.append(INDENT).append("(")
+        builder.append("(")
 
         indent += 1
         visit(ctx.getChild(1)) // sub query sql

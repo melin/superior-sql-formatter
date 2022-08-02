@@ -15,8 +15,7 @@ class SparkCudSqlFormatterTest {
         val expected = """
             |CREATE TABLE student_copy USING CSV AS
             |SELECT *
-            |FROM
-            |  student
+            |FROM student
             |WHERE
             |  age BETWEEN 10 AND 12
             |  AND address NOT LIKE '%hangzou%'

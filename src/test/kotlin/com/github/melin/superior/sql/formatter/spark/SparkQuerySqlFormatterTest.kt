@@ -13,8 +13,7 @@ class SparkQuerySqlFormatterTest {
             |SELECT
             |  name,
             |  age
-            |FROM
-            |  person
+            |FROM person
             |ORDER BY
             |  age DESC,
             |  name ASC NULLS FIRST
@@ -31,8 +30,7 @@ class SparkQuerySqlFormatterTest {
             |SELECT DISTINCT
             |  name,
             |  age
-            |FROM
-            |  users AS t
+            |FROM users AS t
             |LIMIT 10
         """.trimMargin()
         Assert.assertEquals(expected, formatSql)
@@ -46,8 +44,7 @@ class SparkQuerySqlFormatterTest {
             |SELECT
             |  date '2022-12-12' AS test,
             |  name
-            |FROM
-            |  demo
+            |FROM demo
             |WHERE
             |  NOT name = 'ss'
             |  AND id > 100
@@ -65,8 +62,7 @@ class SparkQuerySqlFormatterTest {
             |SELECT
             |  age,
             |  name
-            |FROM
-            |  person
+            |FROM person
             |DISTRIBUTE BY
             |  age
         """.trimMargin()
@@ -81,8 +77,7 @@ class SparkQuerySqlFormatterTest {
             |SELECT
             |  age,
             |  name
-            |FROM
-            |  person
+            |FROM person
             |CLUSTER BY
             |  age
         """.trimMargin()
@@ -97,8 +92,7 @@ class SparkQuerySqlFormatterTest {
             |SELECT
             |  city,
             |  sum(quantity) AS sum
-            |FROM
-            |  dealer
+            |FROM dealer
             |GROUP BY
             |  city
             |HAVING
@@ -115,8 +109,7 @@ class SparkQuerySqlFormatterTest {
             |SELECT
             |  city,
             |  sum(quantity) AS sum
-            |FROM
-            |  dealer
+            |FROM dealer
             |GROUP BY
             |  city
             |HAVING
@@ -137,8 +130,7 @@ class SparkQuerySqlFormatterTest {
             |    WHERE
             |      car_model IN ('Honda Civic', 'Honda CRV')
             |  ) AS `sum(quantity)`
-            |FROM
-            |  dealer
+            |FROM dealer
             |GROUP BY
             |  id
             |ORDER BY
@@ -157,8 +149,7 @@ class SparkQuerySqlFormatterTest {
             |  city,
             |  car_model,
             |  sum(quantity) AS sum
-            |FROM
-            |  dealer
+            |FROM dealer
             |GROUP BY
             |  GROUPING SETS (
             |    (city, car_model),
@@ -182,8 +173,7 @@ class SparkQuerySqlFormatterTest {
             |  city,
             |  car_model,
             |  sum(quantity) AS sum
-            |FROM
-            |  dealer
+            |FROM dealer
             |GROUP BY
             |  city,
             |  car_model WITH ROLLUP
@@ -202,11 +192,9 @@ class SparkQuerySqlFormatterTest {
             |SELECT
             |  d.name,
             |  d.test
-            |FROM
-            |  (
+            |FROM (
             |    SELECT *
-            |    FROM
-            |      demo
+            |    FROM demo
             |  ) t
         """.trimMargin()
         Assert.assertEquals(expected, formatSql)
@@ -222,8 +210,7 @@ class SparkQuerySqlFormatterTest {
         val formatSql = SparkSqlFormatter.formatSql(sql)
         val expected = """
             |SELECT *
-            |FROM
-            |  demo1 AS t1
+            |FROM demo1 AS t1
             |  LEFT JOIN demo2 t2 ON t1.col1 = t2.col2
             |  LEFT JOIN demo3 t3 ON t1.sd = t3.col
         """.trimMargin()
@@ -239,13 +226,11 @@ class SparkQuerySqlFormatterTest {
         val formatSql = SparkSqlFormatter.formatSql(sql)
         val expected = """
             |SELECT *
-            |FROM
-            |  sales.orders
+            |FROM sales.orders
             |WHERE
             |  customer_id IN (
             |    SELECT customer_id
-            |    FROM
-            |      sales.customers
+            |    FROM sales.customers
             |    WHERE
             |      city = 'San Jose'
             |  )
@@ -265,13 +250,11 @@ class SparkQuerySqlFormatterTest {
         val formatSql = SparkSqlFormatter.formatSql(sql)
         val expected = """
             |SELECT *
-            |FROM
-            |  sales.orders o
+            |FROM sales.orders o
             |WHERE
             |  EXISTS (
             |    SELECT customer_id
-            |    FROM
-            |      sales.customers c
+            |    FROM sales.customers c
             |    WHERE
             |      o.customer_id = c.customer_id
             |      AND city = 'San Jose'
@@ -302,8 +285,7 @@ class SparkQuerySqlFormatterTest {
             |    WHEN substr(time, 1, 10) = '2014-12-17' 17
             |    WHEN substr(time, 1, 10) = '2014-12-18' 18
             |  ELSE 0 END AS day
-            |FROM
-            |  user_test
+            |FROM user_test
         """.trimMargin()
         Assert.assertEquals(expected, formatSql)
     }
@@ -328,8 +310,7 @@ class SparkQuerySqlFormatterTest {
             |    WHEN Quantity > 30 'The quantity is greater than 30'
             |    WHEN Quantity = 30 'The quantity is 30'
             |  ELSE 'The quantity is under 30' END AS QuantityText
-            |FROM
-            |  OrderDetails
+            |FROM OrderDetails
         """.trimMargin()
         Assert.assertEquals(expected, formatSql)
     }
