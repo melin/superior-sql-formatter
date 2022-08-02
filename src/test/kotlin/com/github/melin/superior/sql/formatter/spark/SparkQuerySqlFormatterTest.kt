@@ -339,4 +339,102 @@ class SparkQuerySqlFormatterTest {
         """.trimMargin()
         Assert.assertEquals(expected, formatSql)
     }
+
+    @Test
+    fun cteQuerySqlTest1() {
+        val sql = """
+            with q1 as ( select key from q2 where key = '5'),
+            q2 as ( select key from src where key = '5')
+            select * from (select key from q1) a;
+        """.trimIndent()
+        val formatSql = SparkSqlFormatter.formatSql(sql)
+        val expected = """
+            |WITH q1 AS (
+            |  SELECT key
+            |  FROM q2
+            |  WHERE
+            |    key = '5'
+            |),
+            |q2 AS (
+            |  SELECT key
+            |  FROM src
+            |  WHERE
+            |    key = '5'
+            |)
+            |SELECT *
+            |FROM (
+            |    SELECT key
+            |    FROM q1
+            |  ) a
+        """.trimMargin()
+        Assert.assertEquals(expected, formatSql)
+    }
+
+    @Test
+    fun cteQuerySqlTest2() {
+        val sql = """
+            WITH t(x, y) AS (SELECT 1, 2)
+            SELECT * FROM t WHERE x = 1 AND y = 2;
+        """.trimIndent()
+        val formatSql = SparkSqlFormatter.formatSql(sql)
+        val expected = """
+            |WITH t(x, y) AS (
+            |  SELECT  
+            |  1,  
+            |  2
+            |)
+            |SELECT *
+            |FROM t
+            |WHERE
+            |  x = 1
+            |  AND y = 2
+        """.trimMargin()
+        Assert.assertEquals(expected, formatSql)
+    }
+
+    @Test
+    fun cteQuerySqlTest3() {
+        val sql = """
+            WITH t AS (
+                WITH t2 AS (SELECT 1)
+                SELECT * FROM t2
+            )
+            SELECT * FROM t;
+        """.trimIndent()
+        val formatSql = SparkSqlFormatter.formatSql(sql)
+        val expected = """
+            |WITH t AS (
+            |  WITH t2 AS (
+            |    SELECT 1
+            |  )
+            |  SELECT *
+            |  FROM t2
+            |)
+            |SELECT *
+            |FROM t
+        """.trimMargin()
+        Assert.assertEquals(expected, formatSql)
+    }
+
+    @Test
+    fun cteQuerySqlTest4() {
+        val sql = """
+            SELECT max(c) FROM (
+                WITH t(c) AS (SELECT 1)
+                SELECT * FROM t
+            );
+        """.trimIndent()
+        val formatSql = SparkSqlFormatter.formatSql(sql)
+        val expected = """
+            |SELECT max(c)
+            |FROM (
+            |    WITH t(c) AS (
+            |      SELECT 1
+            |    )
+            |    SELECT *
+            |    FROM t
+            |  )
+        """.trimMargin()
+        Assert.assertEquals(expected, formatSql)
+    }
 }

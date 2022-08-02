@@ -26,6 +26,52 @@ class FormatterVisitor(val builder: StringBuilder) : SparkSqlParserBaseVisitor<V
         return null
     }
 
+    override fun visitCtes(ctx: CtesContext): Void? {
+        append(indent)
+        builder.append("WITH ")
+
+        var first = true
+        ctx.namedQuery().forEach { child ->
+            if (first) {
+                first = false
+            } else {
+                builder.append(",\n")
+                append(indent)
+            }
+            visit(child)
+        }
+        builder.append("\n")
+
+        return null
+    }
+
+    override fun visitNamedQuery(ctx: NamedQueryContext): Void? {
+        builder.append(ctx.name.text)
+
+        if (ctx.columnAliases != null) {
+            builder.append("(")
+            var first = true
+            ctx.columnAliases.identifierSeq().ident.forEach { col ->
+                if (first) {
+                    first = false
+                } else {
+                    builder.append(", ")
+                }
+                visit(col)
+            }
+            builder.append(")")
+        }
+
+        if (ctx.AS() != null) {
+            builder.append(" AS ")
+        }
+
+        builder.append("(")
+        visit(ctx.query())
+        builder.append(")")
+        return null
+    }
+
     override fun visitHint(ctx: HintContext): Void? {
         builder.append(" /*+ ")
 
@@ -128,6 +174,7 @@ class FormatterVisitor(val builder: StringBuilder) : SparkSqlParserBaseVisitor<V
     }
 
     override fun visitFromClause(ctx: FromClauseContext): Void? {
+        builder.append('\n')
         ctx.children.forEach { child ->
             if (child is TerminalNodeImpl) {
                 append(indent, "FROM")
@@ -655,7 +702,6 @@ class FormatterVisitor(val builder: StringBuilder) : SparkSqlParserBaseVisitor<V
             builder.append(' ')
             visit(Iterables.getOnlyElement(ctx.children))
         }
-        builder.append('\n')
 
         return null;
     }
