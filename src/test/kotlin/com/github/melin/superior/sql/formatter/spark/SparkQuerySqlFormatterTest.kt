@@ -7,10 +7,13 @@ class SparkQuerySqlFormatterTest {
 
     @Test
     fun simpleSelectSqlTest() {
-        val sql = "SELECT name, age FROM person ORDER BY age DESC, name asc NULLS FIRST limit all;"
+        val sql = """
+            SELECT /*+ REPARTITION(100), COALESCE(500), REPARTITION_BY_RANGE(3, c) */ name, age FROM person 
+            ORDER BY age DESC, name asc NULLS FIRST limit all;
+        """.trimIndent()
         val formatSql = SparkSqlFormatter.formatSql(sql)
         val expected = """
-            |SELECT
+            |SELECT /*+ REPARTITION(100), COALESCE(500), REPARTITION_BY_RANGE(3, c) */
             |  name,
             |  age
             |FROM person
@@ -304,6 +307,35 @@ class SparkQuerySqlFormatterTest {
             |    WHEN Quantity = 30 'The quantity is 30'
             |  ELSE 'The quantity is under 30' END AS QuantityText
             |FROM OrderDetails
+        """.trimMargin()
+        Assert.assertEquals(expected, formatSql)
+    }
+
+    @Test
+    fun tvfQuerySqlTest1() {
+        val sql = """
+            SELECT * FROM range(6 + cos(3));
+        """.trimIndent()
+        val formatSql = SparkSqlFormatter.formatSql(sql)
+        val expected = """
+            |SELECT *
+            |FROM range(6 + cos(3))
+        """.trimMargin()
+        Assert.assertEquals(expected, formatSql)
+    }
+
+    @Test
+    fun inlineTableQuerySqlTest1() {
+        val sql = """
+            SELECT * FROM VALUES ("one", 1), ("two", 2), ("three", null) AS data(a, b);
+        """.trimIndent()
+        val formatSql = SparkSqlFormatter.formatSql(sql)
+        val expected = """
+            |SELECT *
+            |FROM VALUES
+            |  ("one", 1), 
+            |  ("two", 2), 
+            |  ("three", null) AS data(a, b)
         """.trimMargin()
         Assert.assertEquals(expected, formatSql)
     }
