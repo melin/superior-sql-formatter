@@ -313,6 +313,12 @@ class FormatterVisitor(val builder: StringBuilder) : SparkSqlParserBaseVisitor<V
             append(indent)
             builder.append("ORDER BY")
             ctx.order.forEachIndexed { index, sortItemContext ->
+                if (ctx.order.size == 1) {
+                    builder.append(" ")
+                } else {
+                    builder.append("\n")
+                    append(indent, INDENT)
+                }
                 visit(sortItemContext)
                 if (index != (ctx.order.size - 1)) {
                     builder.append(",")
@@ -325,6 +331,12 @@ class FormatterVisitor(val builder: StringBuilder) : SparkSqlParserBaseVisitor<V
             append(indent)
             builder.append("SORT BY")
             ctx.sort.forEachIndexed { index, sortItemContext ->
+                if (ctx.sort.size == 1) {
+                    builder.append(" ")
+                } else {
+                    builder.append("\n")
+                    append(indent, INDENT)
+                }
                 visit(sortItemContext)
                 if (index != (ctx.sort.size - 1)) {
                     builder.append(",")
@@ -337,8 +349,13 @@ class FormatterVisitor(val builder: StringBuilder) : SparkSqlParserBaseVisitor<V
             append(indent)
             builder.append("DISTRIBUTE BY")
             ctx.distributeBy.forEachIndexed { index, expressionContext ->
-                builder.append("\n")
-                append(indent, INDENT)
+                if (ctx.distributeBy.size == 1) {
+                    builder.append(" ")
+                } else {
+                    builder.append("\n")
+                    append(indent, INDENT)
+                }
+
                 visit(expressionContext)
                 if (index != (ctx.distributeBy.size - 1)) {
                     builder.append(",")
@@ -351,8 +368,12 @@ class FormatterVisitor(val builder: StringBuilder) : SparkSqlParserBaseVisitor<V
             append(indent)
             builder.append("CLUSTER BY")
             ctx.clusterBy.forEachIndexed { index, expressionContext ->
-                builder.append("\n")
-                append(indent, INDENT)
+                if (ctx.clusterBy.size == 1) {
+                    builder.append(" ")
+                } else {
+                    builder.append("\n")
+                    append(indent, INDENT)
+                }
                 visit(expressionContext)
                 if (index != (ctx.clusterBy.size - 1)) {
                     builder.append(",")
@@ -375,9 +396,6 @@ class FormatterVisitor(val builder: StringBuilder) : SparkSqlParserBaseVisitor<V
     }
 
     override fun visitSortItem(ctx: SparkSqlParser.SortItemContext): Void? {
-        builder.append("\n")
-        append(indent, INDENT)
-
         ctx.children.forEach { child ->
             if (child is TerminalNodeImpl) {
                 builder.append(" ").append(child.text.uppercase())
@@ -436,8 +454,7 @@ class FormatterVisitor(val builder: StringBuilder) : SparkSqlParserBaseVisitor<V
     }
 
     override fun visitGroupByClause(ctx: SparkSqlParser.GroupByClauseContext): Void? {
-        builder.append("\n")
-        append(indent, INDENT)
+        builder.append(" ")
 
         ctx.children.forEach { child ->
             if (child is TerminalNodeImpl) {

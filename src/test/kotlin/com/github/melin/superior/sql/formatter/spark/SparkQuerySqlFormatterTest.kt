@@ -38,7 +38,7 @@ class SparkQuerySqlFormatterTest {
 
     @Test
     fun simpleSelectSqlTest2() {
-        val sql = "select date '2022-12-12' as test, name from demo where not name = 'ss' and id>100 sort by name"
+        val sql = "select date '2022-12-12' as test, name from demo where not name = 'ss' and id>100 sort by name, age"
         val formatSql = SparkSqlFormatter.formatSql(sql)
         val expected = """
             |SELECT
@@ -49,7 +49,8 @@ class SparkQuerySqlFormatterTest {
             |  NOT name = 'ss'
             |  AND id > 100
             |SORT BY
-            |  name
+            |  name,
+            |  age
         """.trimMargin()
         Assert.assertEquals(expected, formatSql)
     }
@@ -63,8 +64,7 @@ class SparkQuerySqlFormatterTest {
             |  age,
             |  name
             |FROM person
-            |DISTRIBUTE BY
-            |  age
+            |DISTRIBUTE BY age
         """.trimMargin()
         Assert.assertEquals(expected, formatSql)
     }
@@ -78,8 +78,7 @@ class SparkQuerySqlFormatterTest {
             |  age,
             |  name
             |FROM person
-            |CLUSTER BY
-            |  age
+            |CLUSTER BY age
         """.trimMargin()
         Assert.assertEquals(expected, formatSql)
     }
@@ -93,8 +92,7 @@ class SparkQuerySqlFormatterTest {
             |  city,
             |  sum(quantity) AS sum
             |FROM dealer
-            |GROUP BY
-            |  city
+            |GROUP BY city
             |HAVING
             |  city = 'Fremont'
         """.trimMargin()
@@ -110,8 +108,7 @@ class SparkQuerySqlFormatterTest {
             |  city,
             |  sum(quantity) AS sum
             |FROM dealer
-            |GROUP BY
-            |  city
+            |GROUP BY city
             |HAVING
             |  max(quantity) > 15
         """.trimMargin()
@@ -131,10 +128,8 @@ class SparkQuerySqlFormatterTest {
             |      car_model IN ('Honda Civic', 'Honda CRV')
             |  ) AS `sum(quantity)`
             |FROM dealer
-            |GROUP BY
-            |  id
-            |ORDER BY
-            |  id
+            |GROUP BY id
+            |ORDER BY id
         """.trimMargin()
         Assert.assertEquals(expected, formatSql)
     }
@@ -150,15 +145,13 @@ class SparkQuerySqlFormatterTest {
             |  car_model,
             |  sum(quantity) AS sum
             |FROM dealer
-            |GROUP BY
-            |  GROUPING SETS (
+            |GROUP BY GROUPING SETS (
             |    (city, car_model),
             |    (city),
             |    (car_model),
             |    ()
             |  )
-            |ORDER BY
-            |  city
+            |ORDER BY city
         """.trimMargin()
         Assert.assertEquals(expected, formatSql)
     }
