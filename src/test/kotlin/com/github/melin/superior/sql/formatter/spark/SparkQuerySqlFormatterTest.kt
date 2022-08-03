@@ -774,4 +774,22 @@ class SparkQuerySqlFormatterTest {
         """.trimMargin()
         Assert.assertEquals(expected, formatSql)
     }
+
+    @Test
+    fun percentileFunctionSqlTest() {
+        val sql = """
+            SELECT percentile_cont(array(0.5, 0.4, 0.1)) WITHIN GROUP (ORDER BY col)
+            FROM VALUES (0), (1), (2), (10) AS tab(col);
+        """.trimIndent()
+        val formatSql = SparkSqlFormatter.formatSql(sql)
+        val expected = """
+            |SELECT percentile_cont(array(0.5, 0.4, 0.1)) WITHIN (GROUP ORDER BY col)
+            |FROM VALUES
+            |  (0), 
+            |  (1), 
+            |  (2), 
+            |  (10) AS tab(col)
+        """.trimMargin()
+        Assert.assertEquals(expected, formatSql)
+    }
 }
