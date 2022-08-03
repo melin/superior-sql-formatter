@@ -560,9 +560,6 @@ class FormatterVisitor(val builder: StringBuilder) : SparkSqlParserBaseVisitor<V
     }
 
     override fun visitSubstring(ctx: SubstringContext): Void? {
-        //(SUBSTR | SUBSTRING) LEFT_PAREN str=valueExpression (FROM | COMMA) pos=valueExpression
-        //      ((FOR | COMMA) len=valueExpression)? RIGHT_PAREN
-
         if (ctx.SUBSTRING() != null) {
             builder.append("substring")
         } else if (ctx.SUBSTR() != null) {
@@ -587,6 +584,23 @@ class FormatterVisitor(val builder: StringBuilder) : SparkSqlParserBaseVisitor<V
             visit(ctx.len)
         }
 
+        builder.append(")")
+        return null
+    }
+
+    override fun visitTrim(ctx: TrimContext): Void? {
+        builder.append("trim(")
+        if (ctx.trimOption != null) {
+            builder.append(ctx.trimOption.text.uppercase()).append(" ")
+        }
+
+        if (ctx.trimStr != null) {
+            visit(ctx.trimStr)
+            builder.append(" ")
+        }
+
+        builder.append("FROM ")
+        visit(ctx.srcStr)
         builder.append(")")
         return null
     }

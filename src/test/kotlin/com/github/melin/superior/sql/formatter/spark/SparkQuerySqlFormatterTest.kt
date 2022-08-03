@@ -98,8 +98,13 @@ class SparkQuerySqlFormatterTest {
             extract(seconds FROM interval 5 hours 30 seconds 1 milliseconds 1 microseconds),
             extract(week FROM timestamp'2019-08-12 01:00:00.123456'),
             substring('Spark SQL' FROM -3),
-            substring('Spark SQL' FROM 5 FOR 1)
+            substring('Spark SQL' FROM 5 FOR 1),
+            trim('    SparkSQL   '),
+            trim(BOTH FROM '    SparkSQL   '),
+            trim(BOTH 'SL' FROM 'SSparkSQLS'),
+            trim('SL' FROM 'SSparkSQLS')
         """.trimIndent()
+
         val formatSql = SparkSqlFormatter.formatSql(sql)
         val expected = """
             |SELECT
@@ -124,7 +129,11 @@ class SparkQuerySqlFormatterTest {
             |  extract(SECONDS FROM INTERVAL 5 hours 30 seconds 1 milliseconds 1 microseconds),
             |  extract(WEEK FROM timestamp '2019-08-12 01:00:00.123456'),
             |  substring('Spark SQL' FROM -3),
-            |  substring('Spark SQL' FROM 5 FOR 1)
+            |  substring('Spark SQL' FROM 5 FOR 1),
+            |  trim('    SparkSQL   '),
+            |  trim(BOTH FROM '    SparkSQL   '),
+            |  trim(BOTH 'SL' FROM 'SSparkSQLS'),
+            |  trim('SL' FROM 'SSparkSQLS')
         """.trimMargin()
         Assert.assertEquals(expected, formatSql)
     }
