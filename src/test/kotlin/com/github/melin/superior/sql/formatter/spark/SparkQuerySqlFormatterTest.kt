@@ -379,9 +379,9 @@ class SparkQuerySqlFormatterTest {
         val formatSql = SparkSqlFormatter.formatSql(sql)
         val expected = """
             |WITH t(x, y) AS (
-            |  SELECT  
-            |  1,  
-            |  2
+            |  SELECT
+            |    1,
+            |    2
             |)
             |SELECT *
             |FROM t
@@ -484,6 +484,50 @@ class SparkQuerySqlFormatterTest {
             |    ARRAY(40, 80)
             |  ) AS d_age
             |GROUP BY c_age
+        """.trimMargin()
+        Assert.assertEquals(expected, formatSql)
+    }
+
+    @Test
+    fun pivotSqlTest1() {
+        val sql = """
+            SELECT * FROM person
+            PIVOT (
+                SUM(age) AS a, AVG(class) AS c
+                FOR name IN ('John' AS john, 'Mike' AS mike)
+            );
+        """.trimIndent()
+        val formatSql = SparkSqlFormatter.formatSql(sql)
+        val expected = """
+            |SELECT *
+            |FROM person
+            |  PIVOT (
+            |    SUM(age) AS a,
+            |    AVG(class) AS c
+            |    FOR name IN ('John' AS john, 'Mike' AS mike)
+            |  )
+        """.trimMargin()
+        Assert.assertEquals(expected, formatSql)
+    }
+
+    @Test
+    fun pivotSqlTest2() {
+        val sql = """
+            SELECT * FROM person
+            PIVOT (
+                SUM(age) AS a, AVG(class) AS c
+                FOR (name, age) IN (('John', 30) AS c1, ('Mike', 40) AS c2)
+            );
+        """.trimIndent()
+        val formatSql = SparkSqlFormatter.formatSql(sql)
+        val expected = """
+            |SELECT *
+            |FROM person
+            |  PIVOT (
+            |    SUM(age) AS a,
+            |    AVG(class) AS c
+            |    FOR (name, age) IN (('John', 30) AS c1, ('Mike', 40) AS c2)
+            |  )
         """.trimMargin()
         Assert.assertEquals(expected, formatSql)
     }

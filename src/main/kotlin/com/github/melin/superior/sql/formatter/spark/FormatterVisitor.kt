@@ -236,6 +236,66 @@ class FormatterVisitor(val builder: StringBuilder) : SparkSqlParserBaseVisitor<V
         return null
     }
 
+    override fun visitPivotClause(ctx: PivotClauseContext): Void? {
+        builder.append("\n")
+        append(indent, INDENT)
+
+        builder.append("PIVOT (")
+
+        indent++
+        visit(ctx.aggregates)
+        builder.append("\n")
+        append(indent, INDENT)
+        indent--
+
+        builder.append("FOR ")
+
+        ctx.pivotColumn().children.forEach {child ->
+            if (child is TerminalNodeImpl) {
+                val text = child.text
+                builder.append(text)
+                if (",".equals(text)) {
+                    builder.append(" ")
+                }
+            } else {
+                visit(child)
+            }
+        }
+
+        builder.append(" IN ")
+        builder.append("(")
+        var first = true
+        ctx.pivotValues.forEach{child ->
+            if (first) {
+                first = false
+            } else {
+                builder.append(", ")
+            }
+            visit(child)
+        }
+        builder.append(")")
+
+        builder.append("\n")
+        append(indent, INDENT)
+        builder.append(")")
+        return null
+    }
+
+    override fun visitPivotValue(ctx: PivotValueContext): Void? {
+        visit(ctx.expression())
+
+        if (ctx.AS() != null) {
+            builder.append(" AS")
+        }
+
+        if (ctx.identifier() != null) {
+            builder.append(" ")
+            visit(ctx.identifier())
+        }
+
+        return null
+    }
+
     override fun visitJoinRelation(ctx: JoinRelationContext): Void? {
         append(indent, "\n", INDENT)
         ctx.children.forEach { child ->
@@ -740,7 +800,8 @@ class FormatterVisitor(val builder: StringBuilder) : SparkSqlParserBaseVisitor<V
         if (ctx.childCount > 1) {
             ctx.children.forEach { child ->
                 if (child is NamedExpressionContext) {
-                    append(indent, "\n", INDENT)
+                    builder.append("\n")
+                    append(indent, INDENT)
                     visit(child)
                 } else if (child is TerminalNodeImpl) {
                     builder.append(child.text)
