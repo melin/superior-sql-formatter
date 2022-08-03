@@ -60,7 +60,25 @@ class SparkQuerySqlFormatterTest {
     }
 
     @Test
-    fun simpleSelectSqlTest3() {
+    fun firstLastSelectSqlTest() {
+        val sql = """
+            SELECT first(col), last(col IGNORE NULLS) FROM VALUES (10), (5), (20) AS tab(col);
+        """.trimIndent()
+        val formatSql = SparkSqlFormatter.formatSql(sql)
+        val expected = """
+            |SELECT
+            |  first(col),
+            |  last(col IGNORE NULLS)
+            |FROM VALUES
+            |  (10), 
+            |  (5), 
+            |  (20) AS tab(col)
+        """.trimMargin()
+        Assert.assertEquals(expected, formatSql)
+    }
+
+    @Test
+    fun simpleSelectSqlTest4() {
         val sql = """
             select array(1,2,3) as arr1, CURRENT_DATE, CURRENT_TIMESTAMP, CURRENT_USER,
             timestampadd(MICROSECOND, 5, TIMESTAMP'2022-02-28 00:00:00'),

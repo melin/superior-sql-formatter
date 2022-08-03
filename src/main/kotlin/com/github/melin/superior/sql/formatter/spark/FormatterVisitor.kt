@@ -496,6 +496,34 @@ class FormatterVisitor(val builder: StringBuilder) : SparkSqlParserBaseVisitor<V
         return null
     }
 
+    override fun visitFirst(ctx: FirstContext): Void? {
+        builder.append("first(")
+        visit(ctx.expression())
+        if (ctx.IGNORE() != null) {
+            builder.append(" IGNORE NULLS")
+        }
+        builder.append(")")
+        return null
+    }
+
+    override fun visitLast(ctx: LastContext): Void? {
+        builder.append("last(")
+        visit(ctx.expression())
+        if (ctx.IGNORE() != null) {
+            builder.append(" IGNORE NULLS")
+        }
+        builder.append(")")
+        return null
+    }
+
+    override fun visitArithmeticBinary(ctx: ArithmeticBinaryContext): Void? {
+        visit(ctx.left)
+        builder.append(" ").append(ctx.operator.text).append(" ")
+        visit(ctx.right)
+
+        return null
+    }
+
     override fun visitComplexDataType(ctx: ComplexDataTypeContext): Void? {
         builder.append(ctx.complex.text).append("<")
         if (ctx.dataType().size == 1) {
@@ -615,14 +643,6 @@ class FormatterVisitor(val builder: StringBuilder) : SparkSqlParserBaseVisitor<V
         return null
     }
 
-    override fun visitArithmeticBinary(ctx: ArithmeticBinaryContext): Void? {
-        visit(ctx.left)
-        builder.append(" ").append(ctx.operator.text).append(" ")
-        visit(ctx.right)
-
-        return null
-    }
-
     override fun visitInlineTable(ctx: InlineTableContext): Void? {
         builder.append("VALUES").append("\n")
         append(indent, INDENT)
@@ -646,6 +666,13 @@ class FormatterVisitor(val builder: StringBuilder) : SparkSqlParserBaseVisitor<V
             builder.append(")")
         }
 
+        return null
+    }
+
+    override fun visitParenthesizedExpression(ctx: ParenthesizedExpressionContext): Void? {
+        builder.append("(")
+        visit(ctx.expression())
+        builder.append(")")
         return null
     }
 
