@@ -3,7 +3,6 @@ package com.github.melin.superior.sql.formatter.spark
 import com.github.melin.superior.sql.formatter.spark.SparkSqlParser.*
 import com.google.common.base.Strings
 import com.google.common.collect.Iterables
-import org.antlr.v4.runtime.tree.ParseTree
 import org.antlr.v4.runtime.tree.TerminalNodeImpl
 import org.apache.commons.lang3.StringUtils
 
@@ -914,7 +913,11 @@ class FormatterVisitor(val builder: StringBuilder) : SparkSqlParserBaseVisitor<V
                     val text = child.text;
                     if (",".equals(text)) {
                         builder.append(text).append(" ")
-                    } else if (StringUtils.endsWithIgnoreCase("filter", text)) {
+                    } else if (StringUtils.endsWithIgnoreCase("filter", text) ||
+                        StringUtils.endsWithIgnoreCase("over", text) ||
+                        StringUtils.endsWithIgnoreCase("IGNORE", text) ||
+                        StringUtils.endsWithIgnoreCase("RESPECT", text) ||
+                        StringUtils.endsWithIgnoreCase("NULLS", text)) {
                         return@outside
                     } else {
                         builder.append(text)
@@ -936,6 +939,135 @@ class FormatterVisitor(val builder: StringBuilder) : SparkSqlParserBaseVisitor<V
             indent -= 3
             builder.append("\n")
             append(indent, INDENT, ")")
+        }
+
+        if (ctx.nullsOption != null) {
+            builder.append(" ").append(ctx.nullsOption.text).append(" NULLS")
+        }
+
+        if (ctx.OVER() != null) {
+            builder.append(" OVER ")
+            visit(ctx.windowSpec())
+        }
+
+        return null
+    }
+
+    override fun visitWindowClause(ctx: WindowClauseContext): Void? {
+        builder.append("\n")
+        append(indent)
+        builder.append("WINDOW ")
+
+        var first = true
+        ctx.namedWindow().forEach { child ->
+            if (first) {
+                first = false
+            } else {
+                builder.append("\n")
+                append(indent, INDENT)
+            }
+
+            visit(child.name)
+            builder.append(" AS ")
+            visit(child.windowSpec())
+        }
+
+        return null
+    }
+
+    override fun visitWindowRef(ctx: WindowRefContext): Void? {
+        if (ctx.LEFT_PAREN() == null) {
+            visit(ctx.name)
+        } else {
+            builder.append("(")
+            visit(ctx.name)
+            builder.append(")")
+        }
+
+        return null
+    }
+
+    override fun visitWindowDef(ctx: WindowDefContext): Void? {
+        builder.append("(")
+
+        if (ctx.CLUSTER() != null) {
+            builder.append(" CLUSTER BY")
+        } else {
+            if (ctx.PARTITION() != null) {
+                builder.append("PARTITION BY ")
+            }
+            if (ctx.DISTRIBUTE() != null) {
+                builder.append("DISTRIBUTE BY ")
+            }
+            if (ctx.PARTITION() != null || ctx.DISTRIBUTE() != null) {
+                var first = true
+                ctx.partition.forEach { part ->
+                    if (first) {
+                        first = false
+                    } else {
+                        builder.append(", ")
+                    }
+                    visit(part)
+                }
+
+                if (ctx.ORDER() != null || ctx.SORT() != null) {
+                    builder.append(" ")
+                }
+            }
+
+            if (ctx.ORDER() != null) {
+                builder.append("ORDER BY ")
+            }
+            if (ctx.SORT() != null) {
+                builder.append("SORT BY ")
+            }
+
+            if (ctx.ORDER() != null || ctx.SORT() != null) {
+                var first = true
+                ctx.sortItem().forEach { item ->
+                    if (first) {
+                        first = false
+                    } else {
+                        builder.append(", ")
+                    }
+                    visit(item)
+                }
+            }
+        }
+
+        if (ctx.windowFrame() != null) {
+            val frame = ctx.windowFrame()
+            builder.append("\n")
+            append(indent, INDENT, INDENT)
+            builder.append(frame.frameType.text)
+
+            if (frame.BETWEEN() != null) {
+                builder.append(" BETWEEN")
+            }
+            visit(frame.start)
+            if (frame.AND() != null) {
+                builder.append(" AND")
+                visit(frame.end)
+            }
+
+            builder.append("\n")
+            append(indent, INDENT, ")")
+        } else {
+            builder.append(")")
+        }
+
+        return null
+    }
+
+    override fun visitFrameBound(ctx: FrameBoundContext): Void? {
+        builder.append(" ")
+        if (ctx.UNBOUNDED() != null) {
+            builder.append("UNBOUNDED ").append(ctx.boundType.text)
+        } else if (ctx.boundType != null) {
+            builder.append("CURRENT ROW")
+        } else {
+            visit(ctx.expression())
+            builder.append(" ").append(ctx.boundType.text)
         }
 
         return null

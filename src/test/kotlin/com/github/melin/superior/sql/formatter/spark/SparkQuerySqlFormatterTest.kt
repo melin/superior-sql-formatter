@@ -570,4 +570,108 @@ class SparkQuerySqlFormatterTest {
         """.trimMargin()
         Assert.assertEquals(expected, formatSql)
     }
+
+    @Test
+    fun windowFunctionSqlTest1() {
+        val sql = """
+            SELECT name, dept, salary, RANK() OVER (salary) AS rank FROM employees;
+        """.trimIndent()
+        val formatSql = SparkSqlFormatter.formatSql(sql)
+        val expected = """
+            |SELECT
+            |  name,
+            |  dept,
+            |  salary,
+            |  RANK() OVER (salary) AS rank
+            |FROM employees
+        """.trimMargin()
+        Assert.assertEquals(expected, formatSql)
+    }
+
+    @Test
+    fun windowFunctionSqlTest2() {
+        val sql = """
+            SELECT name, dept, salary, RANK() OVER (PARTITION BY dept ORDER BY salary) AS rank FROM employees;
+        """.trimIndent()
+        val formatSql = SparkSqlFormatter.formatSql(sql)
+        val expected = """
+            |SELECT
+            |  name,
+            |  dept,
+            |  salary,
+            |  RANK() OVER (PARTITION BY dept ORDER BY salary) AS rank
+            |FROM employees
+        """.trimMargin()
+        Assert.assertEquals(expected, formatSql)
+    }
+
+    @Test
+    fun windowFunctionSqlTest3() {
+        val sql = """
+            SELECT name, dept, salary, DENSE_RANK() OVER (PARTITION BY dept ORDER BY salary ROWS BETWEEN
+                UNBOUNDED PRECEDING AND CURRENT ROW) AS dense_rank FROM employees;
+        """.trimIndent()
+        val formatSql = SparkSqlFormatter.formatSql(sql)
+        val expected = """
+            |SELECT
+            |  name,
+            |  dept,
+            |  salary,
+            |  DENSE_RANK() OVER (PARTITION BY dept ORDER BY salary
+            |    ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW
+            |  ) AS dense_rank
+            |FROM employees
+        """.trimMargin()
+        Assert.assertEquals(expected, formatSql)
+    }
+
+    @Test
+    fun windowFunctionSqlTest4() {
+        val sql = """
+            SELECT name, salary,
+            LAG(salary) OVER (PARTITION BY dept ORDER BY salary) AS lag,
+            LEAD(salary, 1, 0) OVER (PARTITION BY dept ORDER BY salary) AS lead
+            FROM employees;
+        """.trimIndent()
+        val formatSql = SparkSqlFormatter.formatSql(sql)
+        val expected = """
+            |SELECT
+            |  name,
+            |  salary,
+            |  LAG(salary) OVER (PARTITION BY dept ORDER BY salary) AS lag,
+            |  LEAD(salary, 1, 0) OVER (PARTITION BY dept ORDER BY salary) AS lead
+            |FROM employees
+        """.trimMargin()
+        Assert.assertEquals(expected, formatSql)
+    }
+
+    @Test
+    fun windowFunctionSqlTest5() {
+        val sql = """
+            SELECT id, v,
+            LEAD(v, 0) IGNORE NULLS OVER w lead,
+            LAG(v, 0) IGNORE NULLS OVER w lag,
+            NTH_VALUE(v, 2) IGNORE NULLS OVER w nth_value,
+            FIRST_VALUE(v) IGNORE NULLS OVER w first_value,
+            LAST_VALUE(v) IGNORE NULLS OVER w last_value
+            FROM test_ignore_null
+            WINDOW w AS (ORDER BY id)
+            ORDER BY id;
+        """.trimIndent()
+        val formatSql = SparkSqlFormatter.formatSql(sql)
+        val expected = """
+            |SELECT
+            |  id,
+            |  v,
+            |  LEAD(v, 0) IGNORE NULLS OVER w lead,
+            |  LAG(v, 0) IGNORE NULLS OVER w lag,
+            |  NTH_VALUE(v, 2) IGNORE NULLS OVER w nth_value,
+            |  FIRST_VALUE(v) IGNORE NULLS OVER w first_value,
+            |  LAST_VALUE(v) IGNORE NULLS OVER w last_value
+            |FROM test_ignore_null
+            |WINDOW w AS (ORDER BY id)
+            |ORDER BY id
+        """.trimMargin()
+        Assert.assertEquals(expected, formatSql)
+    }
 }
