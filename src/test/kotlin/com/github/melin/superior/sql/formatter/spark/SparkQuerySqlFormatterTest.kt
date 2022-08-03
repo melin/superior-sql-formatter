@@ -93,7 +93,12 @@ class SparkQuerySqlFormatterTest {
             position('bar', 'foobarbar', 5),
             POSITION('bar' IN 'foobarbar'),
             (1, 3.4, 'hello') as row1,
-            exists(array(1, 2, 3), x -> x % 2 == 0)
+            exists(array(1, 2, 3), x -> x % 2 == 0),
+            extract(MONTH FROM INTERVAL '2021-11' YEAR TO MONTH),
+            extract(seconds FROM interval 5 hours 30 seconds 1 milliseconds 1 microseconds),
+            extract(week FROM timestamp'2019-08-12 01:00:00.123456'),
+            substring('Spark SQL' FROM -3),
+            substring('Spark SQL' FROM 5 FOR 1)
         """.trimIndent()
         val formatSql = SparkSqlFormatter.formatSql(sql)
         val expected = """
@@ -114,7 +119,12 @@ class SparkQuerySqlFormatterTest {
             |  position('bar', 'foobarbar', 5),
             |  position('bar' in 'foobarbar'),
             |  (1, 3.4, 'hello') AS row1,
-            |  exists(array(1, 2, 3), x -> x % 2 == 0)
+            |  exists(array(1, 2, 3), x -> x % 2 == 0),
+            |  extract(MONTH FROM INTERVAL '2021-11' YEAR TO MONTH),
+            |  extract(SECONDS FROM INTERVAL 5 hours 30 seconds 1 milliseconds 1 microseconds),
+            |  extract(WEEK FROM timestamp '2019-08-12 01:00:00.123456'),
+            |  substring('Spark SQL' FROM -3),
+            |  substring('Spark SQL' FROM 5 FOR 1)
         """.trimMargin()
         Assert.assertEquals(expected, formatSql)
     }

@@ -526,9 +526,6 @@ class FormatterVisitor(val builder: StringBuilder) : SparkSqlParserBaseVisitor<V
     }
 
     override fun visitLambda(ctx: LambdaContext): Void? {
-        //identifier ARROW expression                                                              #lambda
-        //    | LEFT_PAREN identifier (COMMA identifier)+ RIGHT_PAREN ARROW expression
-
         if (ctx.LEFT_PAREN() != null) {
             builder.append("(")
         }
@@ -550,6 +547,47 @@ class FormatterVisitor(val builder: StringBuilder) : SparkSqlParserBaseVisitor<V
 
         builder.append(" -> ")
         visit(ctx.expression())
+        return null
+    }
+
+    override fun visitExtract(ctx: ExtractContext): Void? {
+        builder.append("extract(")
+            .append(ctx.field.text.uppercase())
+            .append(" FROM ")
+        visit(ctx.source)
+        builder.append(")")
+        return null
+    }
+
+    override fun visitSubstring(ctx: SubstringContext): Void? {
+        //(SUBSTR | SUBSTRING) LEFT_PAREN str=valueExpression (FROM | COMMA) pos=valueExpression
+        //      ((FOR | COMMA) len=valueExpression)? RIGHT_PAREN
+
+        if (ctx.SUBSTRING() != null) {
+            builder.append("substring")
+        } else if (ctx.SUBSTR() != null) {
+            builder.append("substr")
+        }
+        builder.append("(")
+        visit(ctx.str)
+
+        if (ctx.FROM() != null) {
+            builder.append(" FROM ")
+            visit(ctx.pos)
+        } else if (ctx.COMMA().size > 0) {
+            builder.append(", ")
+            visit(ctx.pos)
+        }
+
+        if (ctx.FOR() != null) {
+            builder.append(" FOR ")
+            visit(ctx.len)
+        } else if (ctx.COMMA().size > 1) {
+            builder.append(", ")
+            visit(ctx.len)
+        }
+
+        builder.append(")")
         return null
     }
 
@@ -1350,12 +1388,66 @@ class FormatterVisitor(val builder: StringBuilder) : SparkSqlParserBaseVisitor<V
                 builder.append(child.text)
             } else if (child is BooleanLiteralContext) {
                 builder.append(child.text)
+            } else if (child is IntervalLiteralContext) {
+                visit(child.interval())
             } else {
                 visit(child)
             }
         }
 
         return null;
+    }
+
+    override fun visitInterval(ctx: IntervalContext): Void? {
+        builder.append("INTERVAL ")
+        if (ctx.errorCapturingMultiUnitsInterval() != null) {
+            visit(ctx.errorCapturingMultiUnitsInterval())
+        }
+        if (ctx.errorCapturingUnitToUnitInterval() != null) {
+            visit(ctx.errorCapturingUnitToUnitInterval())
+        }
+        return null;
+    }
+
+    override fun visitMultiUnitsInterval(ctx: MultiUnitsIntervalContext): Void? {
+        var first = true
+        ctx.children.forEach { child ->
+            if (first) {
+                first = false
+            } else {
+                builder.append(" ")
+            }
+            builder.append(child.text)
+        }
+        return null
+    }
+
+    override fun visitUnitToUnitInterval(ctx: UnitToUnitIntervalContext): Void? {
+        visit(ctx.intervalValue())
+        builder.append(" ").append(ctx.from.text.uppercase())
+        builder.append(" TO ").append(ctx.to.text.uppercase())
+        return null
+    }
+
+    override fun visitIntervalValue(ctx: IntervalValueContext): Void? {
+        if (ctx.PLUS() != null) {
+            builder.append("+")
+        }
+        if (ctx.MINUS() != null) {
+            builder.append("-")
+        }
+
+        if (ctx.INTEGER_VALUE() != null) {
+            builder.append(ctx.INTEGER_VALUE().text)
+        }
+        if (ctx.DECIMAL_VALUE() != null) {
+            builder.append(ctx.DECIMAL_VALUE().text)
+        }
+        if (ctx.STRING() != null) {
+            builder.append(ctx.STRING().text)
+        }
+
+        return null
     }
 
     override fun visitColumnReference(ctx: ColumnReferenceContext): Void? {
