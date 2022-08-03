@@ -545,6 +545,53 @@ class FormatterVisitor(val builder: StringBuilder) : SparkSqlParserBaseVisitor<V
         return null
     }
 
+    override fun visitSample(ctx: SampleContext): Void? {
+        builder.append(" TABLESAMPLE (")
+
+        if (ctx.sampleMethod() != null) {
+            visit(ctx.sampleMethod())
+        }
+
+        builder.append(")")
+        if (ctx.REPEATABLE() != null) {
+            builder.append(" REPEATABLE(")
+            builder.append(ctx.seed.text)
+            builder.append(")")
+        }
+
+        return null
+    }
+
+    override fun visitSampleByBucket(ctx: SampleByBucketContext): Void? {
+        builder.append("BUCKET ").append(ctx.numerator.text)
+            .append(" OUT OF ").append(ctx.denominator.text)
+
+        if (ctx.ON() != null) {
+            builder.append(" ")
+            if (ctx.LEFT_PAREN() != null) {
+                visit(ctx.qualifiedName())
+                builder.append("()")
+            } else {
+                visit(ctx.identifier())
+            }
+        }
+        return null
+    }
+
+    override fun visitSampleByPercentile(ctx: SampleByPercentileContext): Void? {
+        if (ctx.negativeSign != null) {
+            builder.append(" -")
+        }
+        builder.append(ctx.percentage.text).append(" PERCENT")
+        return null
+    }
+
+    override fun visitSampleByRows(ctx: SampleByRowsContext): Void? {
+        visit(ctx.expression())
+        builder.append(" ROWS")
+        return null
+    }
+
     override fun visitAliasedQuery(ctx: AliasedQueryContext): Void? {
         builder.append("(")
 

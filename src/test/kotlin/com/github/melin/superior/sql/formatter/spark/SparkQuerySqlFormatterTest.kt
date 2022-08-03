@@ -531,4 +531,43 @@ class SparkQuerySqlFormatterTest {
         """.trimMargin()
         Assert.assertEquals(expected, formatSql)
     }
+
+    @Test
+    fun samplingSqlTest1() {
+        val sql = """
+            SELECT * FROM test TABLESAMPLE (50 PERCENT);
+        """.trimIndent()
+        val formatSql = SparkSqlFormatter.formatSql(sql)
+        val expected = """
+            |SELECT *
+            |FROM test TABLESAMPLE (50 PERCENT)
+        """.trimMargin()
+        Assert.assertEquals(expected, formatSql)
+    }
+
+    @Test
+    fun samplingSqlTest2() {
+        val sql = """
+            SELECT * FROM test TABLESAMPLE (50 ROWS);
+        """.trimIndent()
+        val formatSql = SparkSqlFormatter.formatSql(sql)
+        val expected = """
+            |SELECT *
+            |FROM test TABLESAMPLE (50 ROWS)
+        """.trimMargin()
+        Assert.assertEquals(expected, formatSql)
+    }
+
+    @Test
+    fun samplingSqlTest3() {
+        val sql = """
+            SELECT * FROM test TABLESAMPLE (BUCKET 4 OUT OF 10);
+        """.trimIndent()
+        val formatSql = SparkSqlFormatter.formatSql(sql)
+        val expected = """
+            |SELECT *
+            |FROM test TABLESAMPLE (BUCKET 4 OUT OF 10)
+        """.trimMargin()
+        Assert.assertEquals(expected, formatSql)
+    }
 }
