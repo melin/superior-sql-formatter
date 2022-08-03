@@ -605,6 +605,27 @@ class FormatterVisitor(val builder: StringBuilder) : SparkSqlParserBaseVisitor<V
         return null
     }
 
+    override fun visitOverlay(ctx: OverlayContext): Void? {
+        builder.append("overlay(")
+        visit(ctx.input)
+        builder.append(" PLACING ")
+        visit(ctx.replace)
+        builder.append(" FROM ")
+        visit(ctx.position)
+        if (ctx.FOR() != null) {
+            builder.append(" FOR ")
+            visit(ctx.length)
+        }
+        builder.append(")")
+        return null
+    }
+
+    override fun visitPercentile(ctx: PercentileContext): Void? {
+        //name=(PERCENTILE_CONT | PERCENTILE_DISC) LEFT_PAREN percentage=valueExpression RIGHT_PAREN
+        //      WITHIN GROUP LEFT_PAREN ORDER BY sortItem RIGHT_PAREN ( OVER windowSpec)?
+        return super.visitPercentile(ctx)
+    }
+
     override fun visitArithmeticBinary(ctx: ArithmeticBinaryContext): Void? {
         visit(ctx.left)
         builder.append(" ").append(ctx.operator.text).append(" ")

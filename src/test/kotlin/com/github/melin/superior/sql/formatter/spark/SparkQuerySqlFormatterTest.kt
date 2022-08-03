@@ -102,7 +102,11 @@ class SparkQuerySqlFormatterTest {
             trim('    SparkSQL   '),
             trim(BOTH FROM '    SparkSQL   '),
             trim(BOTH 'SL' FROM 'SSparkSQLS'),
-            trim('SL' FROM 'SSparkSQLS')
+            trim('SL' FROM 'SSparkSQLS'),
+            overlay('Spark SQL' PLACING '_' FROM 6),
+            overlay('Spark SQL' PLACING 'CORE' FROM 7),
+            overlay('Spark SQL' PLACING 'ANSI ' FROM 7 FOR 0),
+            overlay(encode('Spark SQL', 'utf-8') PLACING encode('tructured', 'utf-8') FROM 2 FOR 4)
         """.trimIndent()
 
         val formatSql = SparkSqlFormatter.formatSql(sql)
@@ -133,7 +137,11 @@ class SparkQuerySqlFormatterTest {
             |  trim('    SparkSQL   '),
             |  trim(BOTH FROM '    SparkSQL   '),
             |  trim(BOTH 'SL' FROM 'SSparkSQLS'),
-            |  trim('SL' FROM 'SSparkSQLS')
+            |  trim('SL' FROM 'SSparkSQLS'),
+            |  overlay('Spark SQL' PLACING '_' FROM 6),
+            |  overlay('Spark SQL' PLACING 'CORE' FROM 7),
+            |  overlay('Spark SQL' PLACING 'ANSI ' FROM 7 FOR 0),
+            |  overlay(encode('Spark SQL', 'utf-8') PLACING encode('tructured', 'utf-8') FROM 2 FOR 4)
         """.trimMargin()
         Assert.assertEquals(expected, formatSql)
     }
