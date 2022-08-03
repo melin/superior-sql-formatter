@@ -326,6 +326,12 @@ class FormatterVisitor(val builder: StringBuilder) : SparkSqlParserBaseVisitor<V
         return null
     }
 
+    override fun visitArithmeticUnary(ctx: ArithmeticUnaryContext): Void? {
+        builder.append(ctx.operator.text)
+        visit(ctx.valueExpression())
+        return null
+    }
+
     override fun visitComparisonOperator(ctx: ComparisonOperatorContext): Void? {
         builder.append(" ").append(ctx.text).append(" ")
         return null
@@ -436,8 +442,21 @@ class FormatterVisitor(val builder: StringBuilder) : SparkSqlParserBaseVisitor<V
         return null;
     }
 
-    override fun visitValueExpressionDefault(ctx: ValueExpressionDefaultContext): Void? {
-        return super.visitValueExpressionDefault(ctx)
+    override fun visitStruct(ctx: StructContext): Void? {
+        builder.append("STRUCT(")
+        var first = true
+        ctx.argument .forEach { child ->
+            if (first) {
+                first = false
+            } else {
+                builder.append(", ")
+            }
+
+            visit(child)
+        }
+        builder.append(")")
+
+        return null
     }
 
     override fun visitRelation(ctx: RelationContext): Void? {

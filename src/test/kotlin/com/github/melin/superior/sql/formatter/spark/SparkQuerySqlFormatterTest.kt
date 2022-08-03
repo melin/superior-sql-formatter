@@ -59,6 +59,18 @@ class SparkQuerySqlFormatterTest {
     }
 
     @Test
+    fun simpleSelectSqlTest3() {
+        val sql = """
+            select array(1,2,3) as arr1
+        """.trimIndent()
+        val formatSql = SparkSqlFormatter.formatSql(sql)
+        val expected = """
+            |SELECT array(1, 2, 3) AS arr1
+        """.trimMargin()
+        Assert.assertEquals(expected, formatSql)
+    }
+
+    @Test
     fun simpleSelectDistrubuteBySqlTest() {
         val sql = "SELECT age, name FROM person DISTRIBUTE BY age;"
         val formatSql = SparkSqlFormatter.formatSql(sql)
@@ -320,6 +332,18 @@ class SparkQuerySqlFormatterTest {
         val expected = """
             |SELECT *
             |FROM range(6 + cos(3))
+        """.trimMargin()
+        Assert.assertEquals(expected, formatSql)
+    }
+
+    @Test
+    fun tvfQuerySqlTest2() {
+        val sql = """
+            SELECT inline(array(struct(1, 'a'), struct(2, 'b')))
+        """.trimIndent()
+        val formatSql = SparkSqlFormatter.formatSql(sql)
+        val expected = """
+            |SELECT inline(array(STRUCT(1, 'a'), STRUCT(2, 'b')))
         """.trimMargin()
         Assert.assertEquals(expected, formatSql)
     }
