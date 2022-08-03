@@ -459,6 +459,135 @@ class FormatterVisitor(val builder: StringBuilder) : SparkSqlParserBaseVisitor<V
         return null
     }
 
+    override fun visitCurrentLike(ctx: CurrentLikeContext): Void? {
+        builder.append(ctx.name.text.lowercase())
+        return null
+    }
+
+    override fun visitTimestampadd(ctx: TimestampaddContext): Void? {
+        builder.append(ctx.name.text.lowercase())
+        builder.append("(")
+        builder.append(ctx.unit.text.uppercase()).append(", ")
+        visit(ctx.unitsAmount)
+        builder.append(", ")
+        visit(ctx.timestamp)
+        builder.append(")")
+        return null
+    }
+
+    override fun visitTimestampdiff(ctx: TimestampdiffContext): Void? {
+        builder.append(ctx.name.text.lowercase())
+        builder.append("(")
+        builder.append(ctx.unit.text.uppercase()).append(", ")
+        visit(ctx.startTimestamp)
+        builder.append(", ")
+        visit(ctx.endTimestamp)
+        builder.append(")")
+
+        return null
+    }
+
+    override fun visitCast(ctx: CastContext): Void? {
+        builder.append(ctx.name.text.lowercase()).append("(")
+        visit(ctx.expression())
+        builder.append(" AS ")
+        visit(ctx.dataType())
+        builder.append(")")
+        return null
+    }
+
+    override fun visitComplexDataType(ctx: ComplexDataTypeContext): Void? {
+        builder.append(ctx.complex.text).append("<")
+        if (ctx.dataType().size == 1) {
+            visit(ctx.dataType(0))
+        } else if (ctx.dataType().size == 2) {
+            visit(ctx.dataType(0))
+            builder.append(", ")
+            visit(ctx.dataType(1))
+        } else {
+            if (ctx.NEQ() != null) {
+                builder.append("<>")
+            } else if (ctx.complexColTypeList() != null) {
+                visit(ctx.complexColTypeList())
+            }
+        }
+        builder.append(">")
+        return null
+    }
+
+    override fun visitYearMonthIntervalDataType(ctx: YearMonthIntervalDataTypeContext): Void? {
+        builder.append("INTERVAL ").append(ctx.from.text)
+        if (ctx.TO() != null) {
+            builder.append(" TO ").append(ctx.to.text)
+        }
+
+        return null
+    }
+
+    override fun visitDayTimeIntervalDataType(ctx: DayTimeIntervalDataTypeContext): Void? {
+        builder.append("INTERVAL ").append(ctx.from.text)
+        if (ctx.TO() != null) {
+            builder.append(" TO ").append(ctx.to.text)
+        }
+        return null
+    }
+
+    override fun visitPrimitiveDataType(ctx: PrimitiveDataTypeContext): Void? {
+        visit(ctx.identifier())
+        if (ctx.LEFT_PAREN() != null) {
+            builder.append("(")
+            var first = true
+            ctx.INTEGER_VALUE().forEach { child ->
+                if (first) {
+                    first = false
+                } else {
+                    builder.append(", ")
+                }
+                visit(child)
+            }
+            builder.append(")")
+        }
+
+        return null
+    }
+
+    override fun visitComplexColTypeList(ctx: ComplexColTypeListContext): Void? {
+        var first = true
+        ctx.complexColType().forEach { child ->
+            if (first) {
+                first = false
+            } else {
+                builder.append(", ")
+            }
+            visit(child)
+        }
+
+        return null
+    }
+
+    override fun visitComplexColType(ctx: ComplexColTypeContext): Void? {
+        // : identifier COLON? dataType (NOT NULL)? commentSpec?
+        visit(ctx.identifier())
+        if (ctx.COLON() != null) {
+            builder.append(":")
+        }
+        visit(ctx.dataType())
+
+        if (ctx.NOT() != null) {
+            builder.append(" NOT NULL")
+        }
+
+        visit(ctx.commentSpec())
+
+        return null
+    }
+
+    override fun visitCommentSpec(ctx: CommentSpecContext): Void? {
+        builder.append("COMMENT")
+        visit(ctx.STRING())
+        return null
+    }
+
     override fun visitRelation(ctx: RelationContext): Void? {
         var first = true
         ctx.children.forEach { child ->

@@ -41,11 +41,12 @@ class SparkQuerySqlFormatterTest {
 
     @Test
     fun simpleSelectSqlTest2() {
-        val sql = "select date '2022-12-12' as test, name from demo where not name = 'ss' and id>100 sort by name, age"
+        val sql = "select date '2022-12-12' as test, CURRENT_DATE, name from demo where not name = 'ss' and id>100 sort by name, age"
         val formatSql = SparkSqlFormatter.formatSql(sql)
         val expected = """
             |SELECT
             |  date '2022-12-12' AS test,
+            |  CURRENT_DATE,
             |  name
             |FROM demo
             |WHERE
@@ -61,11 +62,31 @@ class SparkQuerySqlFormatterTest {
     @Test
     fun simpleSelectSqlTest3() {
         val sql = """
-            select array(1,2,3) as arr1
+            select array(1,2,3) as arr1, CURRENT_DATE, CURRENT_TIMESTAMP, CURRENT_USER,
+            timestampadd(MICROSECOND, 5, TIMESTAMP'2022-02-28 00:00:00'),
+            timestampadd(MONTH, -1, TIMESTAMP'2022-03-31 00:00:00'),
+            timestampdiff(MONTH, TIMESTAMP'2021-02-28 12:00:00', TIMESTAMP'2021-03-28 11:59:59'),
+            timestampdiff(MONTH, TIMESTAMP'2021-02-28 12:00:00', TIMESTAMP'2021-03-28 12:00:00'),
+            timestampdiff(YEAR, DATE'2021-01-01', DATE'1900-03-28'),
+            cast(split("1,2,3", ",") as array<long>),
+            cast('12' as bigint),
+            CAST('11 23:4:0' AS INTERVAL DAY TO SECOND);
         """.trimIndent()
         val formatSql = SparkSqlFormatter.formatSql(sql)
         val expected = """
-            |SELECT array(1, 2, 3) AS arr1
+            |SELECT
+            |  array(1, 2, 3) AS arr1,
+            |  current_date,
+            |  current_timestamp,
+            |  current_user,
+            |  timestampadd(MICROSECOND, 5, TIMESTAMP '2022-02-28 00:00:00'),
+            |  timestampadd(MONTH, -1, TIMESTAMP '2022-03-31 00:00:00'),
+            |  timestampdiff(MONTH, TIMESTAMP '2021-02-28 12:00:00', TIMESTAMP '2021-03-28 11:59:59'),
+            |  timestampdiff(MONTH, TIMESTAMP '2021-02-28 12:00:00', TIMESTAMP '2021-03-28 12:00:00'),
+            |  timestampdiff(YEAR, DATE '2021-01-01', DATE '1900-03-28'),
+            |  cast(split("1,2,3", ",") AS array<long>),
+            |  cast('12' AS bigint),
+            |  cast('11 23:4:0' AS INTERVAL DAY TO SECOND)
         """.trimMargin()
         Assert.assertEquals(expected, formatSql)
     }
