@@ -3,6 +3,7 @@ package com.github.melin.superior.sql.formatter.spark
 import com.github.melin.superior.sql.formatter.spark.SparkSqlParser.*
 import com.google.common.base.Strings
 import com.google.common.collect.Iterables
+import org.antlr.v4.runtime.tree.ParseTree
 import org.antlr.v4.runtime.tree.TerminalNodeImpl
 import org.apache.commons.lang3.StringUtils
 
@@ -175,10 +176,59 @@ class FormatterVisitor(val builder: StringBuilder) : SparkSqlParserBaseVisitor<V
 
     override fun visitFromClause(ctx: FromClauseContext): Void? {
         builder.append('\n')
+
         ctx.children.forEach { child ->
             if (child is TerminalNodeImpl) {
                 append(indent, "FROM")
             } else {
+                visit(child)
+            }
+        }
+
+        return null
+    }
+
+    override fun visitLateralView(ctx: LateralViewContext): Void? {
+        builder.append("\n")
+        append(indent, INDENT)
+
+        builder.append("LATERAL VIEW ")
+        if(ctx.OUTER() != null) {
+            builder.append("OUTER ")
+        }
+
+        visit(ctx.qualifiedName())
+        builder.append("(\n")
+        indent += 2
+        ctx.expression().forEach { child ->
+            append(indent)
+            visit(child)
+        }
+        indent -= 2
+
+        builder.append("\n")
+        append(indent, INDENT)
+        builder.append(")")
+
+        if (ctx.tblName != null) {
+            builder.append(" ")
+            visit(ctx.tblName)
+            builder.append(" ")
+        }
+
+        if (ctx.AS() != null) {
+            builder.append("AS ")
+        }
+
+        var first = true
+        if (ctx.colName.size > 0) {
+            ctx.colName.forEach { child ->
+                if (first) {
+                    first = false
+                } else {
+                    builder.append(", ")
+                }
+
                 visit(child)
             }
         }

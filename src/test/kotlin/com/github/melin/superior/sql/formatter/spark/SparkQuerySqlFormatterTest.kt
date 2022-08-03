@@ -437,4 +437,54 @@ class SparkQuerySqlFormatterTest {
         """.trimMargin()
         Assert.assertEquals(expected, formatSql)
     }
+
+    @Test
+    fun lateralViewSqlTest1() {
+        val sql = """
+            SELECT c_age, COUNT(1) FROM person
+            LATERAL VIEW EXPLODE(ARRAY(30, 60)) t1 AS c_age
+            LATERAL VIEW EXPLODE(ARRAY(40, 80)) t2 AS d_age
+            GROUP BY c_age;
+        """.trimIndent()
+        val formatSql = SparkSqlFormatter.formatSql(sql)
+        val expected = """
+            |SELECT
+            |  c_age,
+            |  COUNT(1)
+            |FROM person
+            |  LATERAL VIEW EXPLODE(
+            |    ARRAY(30, 60)
+            |  ) t1 AS c_age
+            |  LATERAL VIEW EXPLODE(
+            |    ARRAY(40, 80)
+            |  ) t2 AS d_age
+            |GROUP BY c_age
+        """.trimMargin()
+        Assert.assertEquals(expected, formatSql)
+    }
+
+    @Test
+    fun lateralViewSqlTest2() {
+        val sql = """
+            SELECT c_age, COUNT(1) FROM person
+                LATERAL VIEW OUTER EXPLODE(ARRAY(30, 60)) AS c_age
+                LATERAL VIEW OUTER EXPLODE(ARRAY(40, 80)) AS d_age 
+            GROUP BY c_age;
+        """.trimIndent()
+        val formatSql = SparkSqlFormatter.formatSql(sql)
+        val expected = """
+            |SELECT
+            |  c_age,
+            |  COUNT(1)
+            |FROM person
+            |  LATERAL VIEW OUTER EXPLODE(
+            |    ARRAY(30, 60)
+            |  ) AS c_age
+            |  LATERAL VIEW OUTER EXPLODE(
+            |    ARRAY(40, 80)
+            |  ) AS d_age
+            |GROUP BY c_age
+        """.trimMargin()
+        Assert.assertEquals(expected, formatSql)
+    }
 }
