@@ -516,6 +516,15 @@ class FormatterVisitor(val builder: StringBuilder) : SparkSqlParserBaseVisitor<V
         return null
     }
 
+    override fun visitPosition(ctx: PositionContext): Void? {
+        builder.append("position(")
+        visit(ctx.substr)
+        builder.append(" in ")
+        visit(ctx.str)
+        builder.append(")")
+        return null
+    }
+
     override fun visitArithmeticBinary(ctx: ArithmeticBinaryContext): Void? {
         visit(ctx.left)
         builder.append(" ").append(ctx.operator.text).append(" ")

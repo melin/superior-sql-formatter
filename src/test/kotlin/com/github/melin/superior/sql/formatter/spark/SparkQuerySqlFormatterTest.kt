@@ -46,7 +46,7 @@ class SparkQuerySqlFormatterTest {
         val expected = """
             |SELECT
             |  date '2022-12-12' AS test,
-            |  CURRENT_DATE,
+            |  current_date,
             |  name
             |FROM demo
             |WHERE
@@ -88,7 +88,10 @@ class SparkQuerySqlFormatterTest {
             timestampdiff(YEAR, DATE'2021-01-01', DATE'1900-03-28'),
             cast(split("1,2,3", ",") as array<long>),
             cast('12' as bigint),
-            CAST('11 23:4:0' AS INTERVAL DAY TO SECOND);
+            CAST('11 23:4:0' AS INTERVAL DAY TO SECOND),
+            position('bar', 'foobarbar'),
+            position('bar', 'foobarbar', 5),
+            POSITION('bar' IN 'foobarbar')
         """.trimIndent()
         val formatSql = SparkSqlFormatter.formatSql(sql)
         val expected = """
@@ -104,7 +107,10 @@ class SparkQuerySqlFormatterTest {
             |  timestampdiff(YEAR, DATE '2021-01-01', DATE '1900-03-28'),
             |  cast(split("1,2,3", ",") AS array<long>),
             |  cast('12' AS bigint),
-            |  cast('11 23:4:0' AS INTERVAL DAY TO SECOND)
+            |  cast('11 23:4:0' AS INTERVAL DAY TO SECOND),
+            |  position('bar', 'foobarbar'),
+            |  position('bar', 'foobarbar', 5),
+            |  position('bar' in 'foobarbar')
         """.trimMargin()
         Assert.assertEquals(expected, formatSql)
     }
