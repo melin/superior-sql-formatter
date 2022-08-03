@@ -91,7 +91,9 @@ class SparkQuerySqlFormatterTest {
             CAST('11 23:4:0' AS INTERVAL DAY TO SECOND),
             position('bar', 'foobarbar'),
             position('bar', 'foobarbar', 5),
-            POSITION('bar' IN 'foobarbar')
+            POSITION('bar' IN 'foobarbar'),
+            (1, 3.4, 'hello') as row1,
+            exists(array(1, 2, 3), x -> x % 2 == 0)
         """.trimIndent()
         val formatSql = SparkSqlFormatter.formatSql(sql)
         val expected = """
@@ -110,7 +112,9 @@ class SparkQuerySqlFormatterTest {
             |  cast('11 23:4:0' AS INTERVAL DAY TO SECOND),
             |  position('bar', 'foobarbar'),
             |  position('bar', 'foobarbar', 5),
-            |  position('bar' in 'foobarbar')
+            |  position('bar' in 'foobarbar'),
+            |  (1, 3.4, 'hello') AS row1,
+            |  exists(array(1, 2, 3), x -> x % 2 == 0)
         """.trimMargin()
         Assert.assertEquals(expected, formatSql)
     }

@@ -525,6 +525,34 @@ class FormatterVisitor(val builder: StringBuilder) : SparkSqlParserBaseVisitor<V
         return null
     }
 
+    override fun visitLambda(ctx: LambdaContext): Void? {
+        //identifier ARROW expression                                                              #lambda
+        //    | LEFT_PAREN identifier (COMMA identifier)+ RIGHT_PAREN ARROW expression
+
+        if (ctx.LEFT_PAREN() != null) {
+            builder.append("(")
+        }
+
+        var first = true
+        ctx.identifier().forEach { child ->
+            if (first) {
+                first = false
+            } else {
+                builder.append(", ")
+            }
+
+            visit(child)
+        }
+
+        if (ctx.RIGHT_PAREN() != null) {
+            builder.append(")")
+        }
+
+        builder.append(" -> ")
+        visit(ctx.expression())
+        return null
+    }
+
     override fun visitArithmeticBinary(ctx: ArithmeticBinaryContext): Void? {
         visit(ctx.left)
         builder.append(" ").append(ctx.operator.text).append(" ")
