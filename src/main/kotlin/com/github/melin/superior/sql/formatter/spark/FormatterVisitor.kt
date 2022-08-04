@@ -50,17 +50,7 @@ class FormatterVisitor(val builder: StringBuilder) : SparkSqlParserBaseVisitor<V
         builder.append(ctx.name.text)
 
         if (ctx.columnAliases != null) {
-            builder.append("(")
-            var first = true
-            ctx.columnAliases.identifierSeq().ident.forEach { col ->
-                if (first) {
-                    first = false
-                } else {
-                    builder.append(", ")
-                }
-                visit(col)
-            }
-            builder.append(")")
+            joinChild(ctx.columnAliases.identifierSeq().ident)
         }
 
         if (ctx.AS() != null) {
@@ -74,35 +64,13 @@ class FormatterVisitor(val builder: StringBuilder) : SparkSqlParserBaseVisitor<V
     }
 
     override fun visitHint(ctx: HintContext): Void? {
-        builder.append(" /*+ ")
-
-        var first = true
-        ctx.hintStatements.forEach { hint ->
-            if (first) {
-                first = false
-            } else {
-                builder.append(", ")
-            }
-            visit(hint)
-        }
-        builder.append(" */")
+        joinChild(ctx.hintStatements, " /*+ ", " */")
         return null
     }
 
     override fun visitHintStatement(ctx: HintStatementContext): Void? {
         visit(ctx.hintName)
-
-        builder.append("(")
-        var first = true
-        ctx.parameters.forEach { param ->
-            if (first) {
-                first = false
-            } else {
-                builder.append(", ")
-            }
-            visit(param)
-        }
-        builder.append(")")
+        joinChild(ctx.parameters)
 
         return null
     }
@@ -182,19 +150,7 @@ class FormatterVisitor(val builder: StringBuilder) : SparkSqlParserBaseVisitor<V
             builder.append("AS ")
         }
 
-        var first = true
-        if (ctx.colName.size > 0) {
-            ctx.colName.forEach { child ->
-                if (first) {
-                    first = false
-                } else {
-                    builder.append(", ")
-                }
-
-                visit(child)
-            }
-        }
-
+        joinChild(ctx.colName, "", "")
         return null
     }
 
@@ -225,17 +181,7 @@ class FormatterVisitor(val builder: StringBuilder) : SparkSqlParserBaseVisitor<V
         }
 
         builder.append(" IN ")
-        builder.append("(")
-        var first = true
-        ctx.pivotValues.forEach{child ->
-            if (first) {
-                first = false
-            } else {
-                builder.append(", ")
-            }
-            visit(child)
-        }
-        builder.append(")")
+        joinChild(ctx.pivotValues)
 
         builder.append("\n")
         append(indent, INDENT)
@@ -328,13 +274,7 @@ class FormatterVisitor(val builder: StringBuilder) : SparkSqlParserBaseVisitor<V
     }
 
     override fun visitComparison(ctx: ComparisonContext): Void? {
-        var first = true
-        ctx.children.forEach { child ->
-            if (first) {
-                first = false
-            }
-            visit(child)
-        }
+        joinChild(ctx.children, "", "", "")
         return null
     }
 
@@ -388,19 +328,7 @@ class FormatterVisitor(val builder: StringBuilder) : SparkSqlParserBaseVisitor<V
     }
 
     override fun visitStruct(ctx: StructContext): Void? {
-        builder.append("STRUCT(")
-        var first = true
-        ctx.argument .forEach { child ->
-            if (first) {
-                first = false
-            } else {
-                builder.append(", ")
-            }
-
-            visit(child)
-        }
-        builder.append(")")
-
+        joinChild(ctx.argument, "STRUCT(", ")")
         return null
     }
 
@@ -475,16 +403,7 @@ class FormatterVisitor(val builder: StringBuilder) : SparkSqlParserBaseVisitor<V
             builder.append("(")
         }
 
-        var first = true
-        ctx.identifier().forEach { child ->
-            if (first) {
-                first = false
-            } else {
-                builder.append(", ")
-            }
-
-            visit(child)
-        }
+        joinChild(ctx.identifier(), "", "")
 
         if (ctx.RIGHT_PAREN() != null) {
             builder.append(")")
@@ -627,33 +546,14 @@ class FormatterVisitor(val builder: StringBuilder) : SparkSqlParserBaseVisitor<V
     override fun visitPrimitiveDataType(ctx: PrimitiveDataTypeContext): Void? {
         visit(ctx.identifier())
         if (ctx.LEFT_PAREN() != null) {
-            builder.append("(")
-            var first = true
-            ctx.INTEGER_VALUE().forEach { child ->
-                if (first) {
-                    first = false
-                } else {
-                    builder.append(", ")
-                }
-                visit(child)
-            }
-            builder.append(")")
+            joinChild(ctx.INTEGER_VALUE())
         }
 
         return null
     }
 
     override fun visitComplexColTypeList(ctx: ComplexColTypeListContext): Void? {
-        var first = true
-        ctx.complexColType().forEach { child ->
-            if (first) {
-                first = false
-            } else {
-                builder.append(", ")
-            }
-            visit(child)
-        }
-
+        joinChild(ctx.complexColType(), "", "")
         return null
     }
 
@@ -1226,15 +1126,7 @@ class FormatterVisitor(val builder: StringBuilder) : SparkSqlParserBaseVisitor<V
                 builder.append("DISTRIBUTE BY ")
             }
             if (ctx.PARTITION() != null || ctx.DISTRIBUTE() != null) {
-                var first = true
-                ctx.partition.forEach { part ->
-                    if (first) {
-                        first = false
-                    } else {
-                        builder.append(", ")
-                    }
-                    visit(part)
-                }
+                joinChild(ctx.partition, "", "")
 
                 if (ctx.ORDER() != null || ctx.SORT() != null) {
                     builder.append(" ")
@@ -1249,15 +1141,7 @@ class FormatterVisitor(val builder: StringBuilder) : SparkSqlParserBaseVisitor<V
             }
 
             if (ctx.ORDER() != null || ctx.SORT() != null) {
-                var first = true
-                ctx.sortItem().forEach { item ->
-                    if (first) {
-                        first = false
-                    } else {
-                        builder.append(", ")
-                    }
-                    visit(item)
-                }
+                joinChild(ctx.sortItem(), "", "")
             }
         }
 
@@ -1487,5 +1371,23 @@ class FormatterVisitor(val builder: StringBuilder) : SparkSqlParserBaseVisitor<V
                 builder.append(childAppend)
             }
         }
+    }
+
+    private fun joinChild(children: List<ParseTree>, start: String = "(", end: String = ")", delimiter: String = ", "): Unit {
+        if (children.size == 0) {
+            return
+        }
+
+        builder.append(start)
+        var first = true
+        children.forEach { param ->
+            if (first) {
+                first = false
+            } else {
+                builder.append(delimiter)
+            }
+            visit(param)
+        }
+        builder.append(end)
     }
 }
