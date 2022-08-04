@@ -92,11 +92,6 @@ class FormatterVisitor(val builder: StringBuilder) : SparkSqlParserBaseVisitor<V
         return null
     }
 
-    override fun visitTableProvider(ctx: TableProviderContext): Void? {
-        iteratorChild(ctx.children)
-        return null
-    }
-
     override fun visitSetQuantifier(ctx: SetQuantifierContext): Void? {
         if (ctx.DISTINCT() !== null) {
             append(indent, " DISTINCT")
@@ -1334,17 +1329,29 @@ class FormatterVisitor(val builder: StringBuilder) : SparkSqlParserBaseVisitor<V
     //---------------------DDL Syntax----------------------
 
     override fun visitCreateTable(ctx: CreateTableContext): Void? {
-        ctx.children.forEach { child ->
-            if (child is TerminalNodeImpl) {
-                val text = child.text.uppercase()
-                if ("AS".equals(text)) {
-                    builder.append(text).append("\n")
-                } else {
-                    builder.append(text).append(" ")
-                }
-            } else {
-                visit(child)
+        visit(ctx.createTableHeader())
+        if (ctx.LEFT_PAREN() != null) {
+            builder.append("(\n")
+            visit(ctx.colTypeList())
+        }
+
+        if (ctx.RIGHT_PAREN() != null) {
+            builder.append("\n)")
+            if (ctx.tableProvider() != null) {
+                builder.append("\n")
+                visit(ctx.tableProvider())
             }
+        } else {
+            if (ctx.tableProvider() != null) {
+                visit(ctx.tableProvider())
+            }
+        }
+
+        if (ctx.AS() != null) {
+            builder.append(" AS\n")
+        }
+        if (ctx.query() != null) {
+            visit(ctx.query())
         }
 
         return null
@@ -1354,6 +1361,25 @@ class FormatterVisitor(val builder: StringBuilder) : SparkSqlParserBaseVisitor<V
         iteratorChild(ctx.children)
         return null
     }
+
+    override fun visitTableProvider(ctx: TableProviderContext): Void? {
+        builder.append("USING ")
+        visit(ctx.multipartIdentifier())
+        return null
+    }
+
+    override fun visitColTypeList(ctx: ColTypeListContext): Void? {
+        joinChild(ctx.colType(), INDENT, "", ",\n" + INDENT)
+        return null
+    }
+
+    override fun visitColType(ctx: ColTypeContext): Void? {
+        //colName=errorCapturingIdentifier dataType (NOT NULL)? commentSpec?
+        joinChild(ctx.children, "", "", " ")
+        return null
+    }
+
+    //-----------------------private method-------------------------------------
 
     private fun iteratorChild(children: List<ParseTree>, uppercase: Boolean = true,
                               terminalNodeAppend: String = " ", childAppend: String = " ") {
