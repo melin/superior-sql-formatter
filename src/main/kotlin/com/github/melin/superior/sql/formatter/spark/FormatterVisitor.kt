@@ -3,6 +3,7 @@ package com.github.melin.superior.sql.formatter.spark
 import com.github.melin.superior.sql.formatter.spark.SparkSqlParser.*
 import com.google.common.base.Strings
 import com.google.common.collect.Iterables
+import org.antlr.v4.runtime.tree.ParseTree
 import org.antlr.v4.runtime.tree.TerminalNodeImpl
 import org.apache.commons.lang3.StringUtils
 
@@ -123,46 +124,8 @@ class FormatterVisitor(val builder: StringBuilder) : SparkSqlParserBaseVisitor<V
         return null
     }
 
-    override fun visitCreateTable(ctx: CreateTableContext): Void? {
-        ctx.children.forEach { child ->
-            if (child is TerminalNodeImpl) {
-                val text = child.text.uppercase()
-                if ("AS".equals(text)) {
-                    builder.append(text).append("\n")
-                } else {
-                    builder.append(text).append(" ")
-                }
-            } else {
-                visit(child)
-            }
-        }
-
-        return null
-    }
-
-    override fun visitCreateTableHeader(ctx: CreateTableHeaderContext): Void? {
-        ctx.children.forEach { child ->
-            if (child is TerminalNodeImpl) {
-                builder.append(child.text.uppercase()).append(" ")
-            } else {
-                visit(child)
-                builder.append(" ")
-            }
-        }
-
-        return null
-    }
-
     override fun visitTableProvider(ctx: TableProviderContext): Void? {
-        ctx.children.forEach { child ->
-            if (child is TerminalNodeImpl) {
-                builder.append(child.text.uppercase()).append(" ")
-            } else {
-                visit(child)
-                builder.append(" ")
-            }
-        }
-
+        iteratorChild(ctx.children)
         return null
     }
 
@@ -297,13 +260,7 @@ class FormatterVisitor(val builder: StringBuilder) : SparkSqlParserBaseVisitor<V
 
     override fun visitJoinRelation(ctx: JoinRelationContext): Void? {
         append(indent, "\n", INDENT)
-        ctx.children.forEach { child ->
-            if (child is TerminalNodeImpl) {
-                builder.append(child.text.uppercase()).append(" ")
-            } else {
-                visit(child)
-            }
-        }
+        iteratorChild(ctx.children, true, " ", "")
         return null
     }
 
@@ -316,13 +273,7 @@ class FormatterVisitor(val builder: StringBuilder) : SparkSqlParserBaseVisitor<V
 
     override fun visitJoinCriteria(ctx: JoinCriteriaContext): Void? {
         builder.append(" ")
-        ctx.children.forEach { child ->
-            if (child is TerminalNodeImpl) {
-                builder.append(child.text.uppercase()).append(" ")
-            } else {
-                visit(child)
-            }
-        }
+        iteratorChild(ctx.children, true, " ", "")
         return null
     }
 
@@ -431,13 +382,7 @@ class FormatterVisitor(val builder: StringBuilder) : SparkSqlParserBaseVisitor<V
             visit(ctx.getChild(0))
             visit(ctx.getChild(1))
         } else {
-            ctx.children.forEach { child ->
-                if (child is TerminalNodeImpl) {
-                    builder.append(child.text)
-                } else {
-                    visit(child)
-                }
-            }
+            iteratorChild(ctx.children, false, "", "")
         }
         return null;
     }
@@ -751,14 +696,7 @@ class FormatterVisitor(val builder: StringBuilder) : SparkSqlParserBaseVisitor<V
     }
 
     override fun visitTableValuedFunction(ctx: TableValuedFunctionContext): Void? {
-        ctx.functionTable().children.forEach { child ->
-            if (child is TerminalNodeImpl) {
-                builder.append(child.text)
-            } else {
-                visit(child)
-            }
-        }
-
+        iteratorChild(ctx.functionTable().children, true, "", "")
         return null
     }
 
@@ -828,13 +766,7 @@ class FormatterVisitor(val builder: StringBuilder) : SparkSqlParserBaseVisitor<V
     }
 
     override fun visitMultipartIdentifier(ctx: MultipartIdentifierContext): Void? {
-        ctx.children.forEach { child ->
-            if (child is TerminalNodeImpl) {
-                builder.append(child.text)
-            } else {
-                visit(child)
-            }
-        }
+        iteratorChild(ctx.children, true, "", "")
         return null
     }
 
@@ -1387,14 +1319,7 @@ class FormatterVisitor(val builder: StringBuilder) : SparkSqlParserBaseVisitor<V
     }
 
     override fun visitDereference(ctx: DereferenceContext): Void? {
-        ctx.children.forEach { child ->
-            if (child is TerminalNodeImpl) {
-                builder.append(child.text)
-            } else {
-                visit(child)
-            }
-        }
-
+        iteratorChild(ctx.children, true, "", "")
         return null;
     }
 
@@ -1520,5 +1445,47 @@ class FormatterVisitor(val builder: StringBuilder) : SparkSqlParserBaseVisitor<V
 
     private fun indentString(indent: Int): String {
         return Strings.repeat(INDENT, indent)
+    }
+
+    //---------------------DDL Syntax----------------------
+
+    override fun visitCreateTable(ctx: CreateTableContext): Void? {
+        ctx.children.forEach { child ->
+            if (child is TerminalNodeImpl) {
+                val text = child.text.uppercase()
+                if ("AS".equals(text)) {
+                    builder.append(text).append("\n")
+                } else {
+                    builder.append(text).append(" ")
+                }
+            } else {
+                visit(child)
+            }
+        }
+
+        return null
+    }
+
+    override fun visitCreateTableHeader(ctx: CreateTableHeaderContext): Void? {
+        iteratorChild(ctx.children)
+        return null
+    }
+
+    private fun iteratorChild(children: List<ParseTree>, uppercase: Boolean = true,
+                              terminalNodeAppend: String = " ", childAppend: String = " ") {
+        children.forEach { child ->
+            if (child is TerminalNodeImpl) {
+                if (uppercase) {
+                    builder.append(child.text.uppercase())
+                } else {
+                    builder.append(child.text)
+                }
+
+                builder.append(terminalNodeAppend)
+            } else {
+                visit(child)
+                builder.append(childAppend)
+            }
+        }
     }
 }
