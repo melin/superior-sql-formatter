@@ -70,8 +70,8 @@ class SparkQuerySqlFormatterTest {
             |  first(col),
             |  last(col IGNORE NULLS)
             |FROM VALUES
-            |  (10), 
-            |  (5), 
+            |  (10),
+            |  (5),
             |  (20) AS tab(col)
         """.trimMargin()
         Assert.assertEquals(expected, formatSql)
@@ -433,8 +433,8 @@ class SparkQuerySqlFormatterTest {
         val expected = """
             |SELECT *
             |FROM VALUES
-            |  ("one", 1), 
-            |  ("two", 2), 
+            |  ("one", 1),
+            |  ("two", 2),
             |  ("three", null) AS data(a, b)
         """.trimMargin()
         Assert.assertEquals(expected, formatSql)
@@ -785,9 +785,9 @@ class SparkQuerySqlFormatterTest {
         val expected = """
             |SELECT percentile_cont(array(0.5, 0.4, 0.1)) WITHIN (GROUP ORDER BY col)
             |FROM VALUES
-            |  (0), 
-            |  (1), 
-            |  (2), 
+            |  (0),
+            |  (1),
+            |  (2),
             |  (10) AS tab(col)
         """.trimMargin()
         Assert.assertEquals(expected, formatSql)
