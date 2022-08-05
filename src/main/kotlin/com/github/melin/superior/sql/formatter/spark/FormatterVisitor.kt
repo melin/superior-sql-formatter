@@ -1336,7 +1336,9 @@ class FormatterVisitor(val builder: StringBuilder) : SparkSqlParserBaseVisitor<V
     //---------------------insert sql----------------------
     override fun visitSingleInsertQuery(ctx: SingleInsertQueryContext): Void? {
         visit(ctx.insertInto())
-        if (StringUtils.startsWithIgnoreCase(ctx.query().text, "select")) {
+        var raw = ctx.query().text
+        if (!StringUtils.startsWithIgnoreCase(raw, "table")
+            &&!StringUtils.startsWithIgnoreCase(raw, "from")) {
             builder.setLength(builder.length - 1); // 去掉最后空格
             builder.append("\n");
         }
