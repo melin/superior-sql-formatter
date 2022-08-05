@@ -85,4 +85,19 @@ class SparkCudSqlFormatterTest {
         """.trimMargin()
         Assert.assertEquals(expected, formatSql)
     }
+
+    @Test
+    fun insertTableSqlTest5() {
+        val sql = """
+            INSERT INTO students (address, name, student_id) VALUES
+            ('Hangzhou, China', 'Kent Yao', 11215016);
+        """.trimIndent()
+        val formatSql = SparkSqlFormatter.formatSql(sql)
+        val expected = """
+            |INSERT INTO students (address, name, student_id)
+            |VALUES
+            |  ('Hangzhou, China', 'Kent Yao', 11215016)
+        """.trimMargin()
+        Assert.assertEquals(expected, formatSql)
+    }
 }

@@ -1373,6 +1373,13 @@ class FormatterVisitor(val builder: StringBuilder) : SparkSqlParserBaseVisitor<V
         return null
     }
 
+    override fun visitIdentifierList(ctx: IdentifierListContext): Void? {
+        builder.append("(")
+        visit(ctx.identifierSeq())
+        builder.append(")")
+        return null
+    }
+
     //---------------------DDL Syntax----------------------
 
     override fun visitCreateTable(ctx: CreateTableContext): Void? {
