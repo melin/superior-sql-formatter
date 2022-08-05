@@ -1333,7 +1333,7 @@ class FormatterVisitor(val builder: StringBuilder) : SparkSqlParserBaseVisitor<V
     //---------------------insert sql----------------------
     override fun visitSingleInsertQuery(ctx: SingleInsertQueryContext): Void? {
         visit(ctx.insertInto())
-        if (!StringUtils.startsWithIgnoreCase(ctx.query().text, "values")) {
+        if (StringUtils.startsWithIgnoreCase(ctx.query().text, "select")) {
             builder.setLength(builder.length - 1); // 去掉最后空格
             builder.append("\n");
         }
@@ -1359,6 +1359,12 @@ class FormatterVisitor(val builder: StringBuilder) : SparkSqlParserBaseVisitor<V
             builder.append(" = ")
             builder.append(ctx.constant().text)
         }
+        return null
+    }
+
+    override fun visitTable(ctx: TableContext): Void? {
+        builder.append("TABLE ")
+        visit(ctx.multipartIdentifier())
         return null
     }
 

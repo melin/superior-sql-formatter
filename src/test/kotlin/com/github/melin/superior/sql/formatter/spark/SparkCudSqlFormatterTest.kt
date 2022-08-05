@@ -7,11 +7,11 @@ class SparkCudSqlFormatterTest {
     @Test
     fun insertTableSqlTest() {
         val sql = """
-            INSERT INTO students PARTITION (student_id = 444444) SELECT name, address FROM persons WHERE name = "Dora Williams";
+            INSERT INTO table students PARTITION (student_id = 444444) SELECT name, address FROM persons WHERE name = "Dora Williams";
         """.trimIndent()
         val formatSql = SparkSqlFormatter.formatSql(sql)
         val expected = """
-            |INSERT INTO students PARTITION(student_id = 444444)
+            |INSERT INTO TABLE students PARTITION(student_id = 444444)
             |SELECT
             |  name,
             |  address
@@ -37,4 +37,16 @@ class SparkCudSqlFormatterTest {
         Assert.assertEquals(expected, formatSql)
     }
 
+    @Test
+    fun insertTableSqlTest2() {
+        val sql = """
+            INSERT INTO students TABLE 
+            visiting_students;
+        """.trimIndent()
+        val formatSql = SparkSqlFormatter.formatSql(sql)
+        val expected = """
+            |INSERT INTO students TABLE visiting_students
+        """.trimMargin()
+        Assert.assertEquals(expected, formatSql)
+    }
 }
