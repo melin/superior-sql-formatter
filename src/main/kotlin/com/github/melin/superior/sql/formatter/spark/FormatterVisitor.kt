@@ -76,14 +76,18 @@ class FormatterVisitor(val builder: StringBuilder) : SparkSqlParserBaseVisitor<V
     }
 
     override fun visitQuery(ctx: QueryContext): Void? {
-        if (!(ctx.parent is StatementDefaultContext || ctx.parent is CreateTableContext)) {
+        if (!(ctx.parent is StatementDefaultContext
+                    || ctx.parent is CreateTableContext
+                    || ctx.parent is SingleInsertQueryContext)) {
             builder.append("\n")
             indent++
         }
 
         super.visitQuery(ctx)
 
-        if (!(ctx.parent is StatementDefaultContext || ctx.parent is CreateTableContext)) {
+        if (!(ctx.parent is StatementDefaultContext
+                    || ctx.parent is CreateTableContext
+                    || ctx.parent is SingleInsertQueryContext)) {
             builder.append("\n")
             indent--
             append(indent)
@@ -1324,6 +1328,36 @@ class FormatterVisitor(val builder: StringBuilder) : SparkSqlParserBaseVisitor<V
 
     private fun indentString(indent: Int): String {
         return Strings.repeat(INDENT, indent)
+    }
+
+    //---------------------insert sql----------------------
+    override fun visitSingleInsertQuery(ctx: SingleInsertQueryContext): Void? {
+        visit(ctx.insertInto())
+        builder.setLength(builder.length - 1) // 去掉最后空格
+        builder.append("\n");
+        visit(ctx.query())
+        return null
+    }
+
+    //INSERT INTO TABLE? multipartIdentifier partitionSpec? (IF NOT EXISTS)? identifierList?
+    override fun visitInsertIntoTable(ctx: InsertIntoTableContext): Void? {
+        iteratorChild(ctx.children)
+        return null
+    }
+
+    override fun visitPartitionSpec(ctx: PartitionSpecContext): Void? {
+        builder.append("PARTITION")
+        joinChild(ctx.partitionVal())
+        return null
+    }
+
+    override fun visitPartitionVal(ctx: PartitionValContext): Void? {
+        visit(ctx.identifier())
+        if (ctx.EQ() != null) {
+            builder.append(" = ")
+            builder.append(ctx.constant().text)
+        }
+        return null
     }
 
     //---------------------DDL Syntax----------------------
