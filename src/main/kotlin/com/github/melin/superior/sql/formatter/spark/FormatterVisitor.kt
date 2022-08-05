@@ -15,6 +15,9 @@ class FormatterVisitor(val builder: StringBuilder) : SparkSqlParserBaseVisitor<V
     private var indent: Int = 0
 
     override fun visitSelectClause(ctx: SelectClauseContext): Void? {
+        if (ctx.parent is FromStatementBodyContext) {
+            builder.append("\n")
+        }
         append(indent, "SELECT")
 
         ctx.hints.forEach { hint -> visit(hint) }
