@@ -792,4 +792,20 @@ class SparkQuerySqlFormatterTest {
         """.trimMargin()
         Assert.assertEquals(expected, formatSql)
     }
+
+    @Test
+    fun callProduceSqlTest() {
+        val sql = """
+            call show_metadata_table_files(table => 'test_hudi_demo', partition => "ds=20210811")
+        """.trimIndent()
+        val formatSql = SparkSqlFormatter.formatSql(sql)
+        val expected = """
+            |CALL show_metadata_table_files(
+            |  table => 'test_hudi_demo',
+            |  partition => "ds=20210811"
+            |)
+        """.trimMargin()
+        Assert.assertEquals(expected, formatSql)
+    }
+
 }

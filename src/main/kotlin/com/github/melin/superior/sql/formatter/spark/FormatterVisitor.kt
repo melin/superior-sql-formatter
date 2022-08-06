@@ -1333,6 +1333,23 @@ class FormatterVisitor(val builder: StringBuilder) : SparkSqlParserBaseVisitor<V
         return Strings.repeat(INDENT, indent)
     }
 
+    //-----------------custom sql-------------------------
+
+    override fun visitCall(ctx: CallContext): Void? {
+        builder.append("CALL ")
+        visit(ctx.multipartIdentifier())
+
+        joinChild(ctx.callArgument(), "(\n" + INDENT, "\n)", ",\n" + INDENT)
+        return null
+    }
+
+    override fun visitNamedArgument(ctx: NamedArgumentContext): Void? {
+        visit(ctx.identifier())
+        builder.append(" => ")
+        visit(ctx.expression())
+        return null
+    }
+
     //---------------------insert sql----------------------
     override fun visitSingleInsertQuery(ctx: SingleInsertQueryContext): Void? {
         visit(ctx.insertInto())
