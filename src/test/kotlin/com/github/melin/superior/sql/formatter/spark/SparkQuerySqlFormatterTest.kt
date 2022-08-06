@@ -913,4 +913,19 @@ class SparkQuerySqlFormatterTest {
         """.trimMargin()
         Assert.assertEquals(expected, formatSql)
     }
+
+    @Test
+    fun loadFileSqlTest1() {
+        val sql = """
+            load data '/user/dataworks/users/qianxiao/demo.csv' table tdl_spark_test options( delimiter=',',header='true');
+        """.trimIndent()
+        val formatSql = SparkSqlFormatter.formatSql(sql)
+        val expected = """
+            |LOAD DATA '/user/dataworks/users/qianxiao/demo.csv' tdl_spark_test OPTIONS(
+            |  delimiter = ',',
+            |  header = 'true'
+            |)
+        """.trimMargin()
+        Assert.assertEquals(expected, formatSql)
+    }
 }

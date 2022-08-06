@@ -1404,6 +1404,16 @@ class FormatterVisitor(val builder: StringBuilder) : SparkSqlParserBaseVisitor<V
         return null
     }
 
+    override fun visitLoadTempTable(ctx: LoadTempTableContext): Void? {
+        builder.append("LOAD DATA ").append(ctx.path.text).append(" ")
+        visit(ctx.multipartIdentifier())
+        if (ctx.OPTIONS() != null) {
+            builder.append(" OPTIONS")
+            joinChild(ctx.propertyList().property(), "(\n" + INDENT, "\n)", ",\n" + INDENT)
+        }
+        return null
+    }
+
     override fun visitProperty(ctx: PropertyContext): Void? {
         visit(ctx.key)
         builder.append(" = ").append(ctx.value.text)
