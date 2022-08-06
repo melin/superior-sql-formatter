@@ -1344,12 +1344,6 @@ class FormatterVisitor(val builder: StringBuilder) : SparkSqlParserBaseVisitor<V
     }
 
     override fun visitDtunnelExpr(ctx: DtunnelExprContext): Void? {
-//DATATUNNEL SOURCE LEFT_PAREN srcName=STRING RIGHT_PAREN OPTIONS
-//        readOpts=dtPropertyList
-//        (TRANSFORM EQ transfromSql=STRING)?
-//        SINK LEFT_PAREN distName=STRING RIGHT_PAREN
-//        (OPTIONS writeOpts=dtPropertyList)?
-
         builder.append("DATATUNNEL SOURCE(").append(ctx.srcName.text).append(") OPTIONS")
         joinChild(ctx.readOpts.dtProperty(), "(\n" + INDENT, "\n)", ",\n" + INDENT)
         builder.append("\n")
@@ -1369,11 +1363,7 @@ class FormatterVisitor(val builder: StringBuilder) : SparkSqlParserBaseVisitor<V
     }
 
     override fun visitDtPropertyKey(ctx: DtPropertyKeyContext): Void? {
-        if (ctx.multipartIdentifier() != null) {
-            visit(ctx.multipartIdentifier())
-        } else {
-            builder.append(ctx.STRING().text)
-        }
+        iteratorChild(ctx.children, false, " ", "")
         return null
     }
 
@@ -1393,10 +1383,42 @@ class FormatterVisitor(val builder: StringBuilder) : SparkSqlParserBaseVisitor<V
         return null
     }
 
+    override fun visitExportTable(ctx: ExportTableContext): Void? {
+        if (ctx.ctes() != null) {
+            visit(ctx.ctes())
+        }
+        builder.append("EXPORT TABLE ")
+        visit(ctx.multipartIdentifier())
+        if (ctx.partitionSpec() != null) {
+            builder.append(" ")
+            visit(ctx.partitionSpec())
+            builder.append("\nTO ").append(ctx.name.text)
+        } else {
+            builder.append(" TO ").append(ctx.name.text)
+        }
+
+        if (ctx.OPTIONS() != null) {
+            builder.append(" OPTIONS")
+            joinChild(ctx.propertyList().property(), "(\n" + INDENT, "\n)", ",\n" + INDENT)
+        }
+        return null
+    }
+
+    override fun visitProperty(ctx: PropertyContext): Void? {
+        visit(ctx.key)
+        builder.append(" = ").append(ctx.value.text)
+        return null
+    }
+
+    override fun visitPropertyKey(ctx: PropertyKeyContext): Void? {
+        iteratorChild(ctx.children, false, " ", "")
+        return null
+    }
+
     //---------------------insert sql----------------------
     override fun visitSingleInsertQuery(ctx: SingleInsertQueryContext): Void? {
         visit(ctx.insertInto())
-        var raw = ctx.query().text
+        val raw = ctx.query().text
         if (!StringUtils.startsWithIgnoreCase(raw, "table")
             &&!StringUtils.startsWithIgnoreCase(raw, "from")) {
             builder.setLength(builder.length - 1); // 去掉最后空格

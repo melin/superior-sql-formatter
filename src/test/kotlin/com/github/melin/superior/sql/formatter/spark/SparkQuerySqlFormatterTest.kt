@@ -873,4 +873,44 @@ class SparkQuerySqlFormatterTest {
         """.trimMargin()
         Assert.assertEquals(expected, formatSql)
     }
+
+    @Test
+    fun exportSqlTest1() {
+        val sql = """
+            export table raw_activity_flat PARTITION (year=2018, month=3, day=12) TO 'activity_20180312.csv' options(delimiter=';')
+        """.trimIndent()
+        val formatSql = SparkSqlFormatter.formatSql(sql)
+        val expected = """
+            |EXPORT TABLE raw_activity_flat PARTITION(year = 2018, month = 3, day = 12)
+            |TO 'activity_20180312.csv' OPTIONS(
+            |  delimiter = ';'
+            |)
+        """.trimMargin()
+        Assert.assertEquals(expected, formatSql)
+    }
+
+    @Test
+    fun exportSqlTest2() {
+        val sql = """
+            with
+                tdl_raw_activity_qunaer as (select email, idnumber, wifi from raw_activity_flat where year=2018 and month=3 and partnerCode='qunaer' )
+            export table tdl_raw_activity_qunaer TO 'activity_20180312.csv'
+        """.trimIndent()
+        val formatSql = SparkSqlFormatter.formatSql(sql)
+        val expected = """
+            |WITH tdl_raw_activity_qunaer AS (
+            |  SELECT
+            |    email,
+            |    idnumber,
+            |    wifi
+            |  FROM raw_activity_flat
+            |  WHERE
+            |    year = 2018
+            |    AND month = 3
+            |    AND partnerCode = 'qunaer'
+            |)
+            |EXPORT TABLE tdl_raw_activity_qunaer TO 'activity_20180312.csv'
+        """.trimMargin()
+        Assert.assertEquals(expected, formatSql)
+    }
 }

@@ -225,7 +225,7 @@ statement
     | LOAD DATA path=constant TABLE multipartIdentifier
         (OPTIONS options=propertyList)?                                #loadTempTable
     | ctes? EXPORT TABLE multipartIdentifier partitionSpec?
-        TO name=constant (OPTIONS options=propertyList)?               #exportTable
+        TO name=STRING (OPTIONS options=propertyList)?                 #exportTable
     | DATATUNNEL SOURCE LEFT_PAREN srcName=STRING RIGHT_PAREN OPTIONS
         readOpts=dtPropertyList
         (TRANSFORM EQ transfromSql=STRING)?
@@ -260,7 +260,7 @@ dtProperty
     ;
 
 dtPropertyKey
-    : multipartIdentifier
+    : identifier (DOT identifier)*
     | STRING
     ;
 
