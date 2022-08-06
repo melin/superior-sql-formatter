@@ -808,4 +808,69 @@ class SparkQuerySqlFormatterTest {
         Assert.assertEquals(expected, formatSql)
     }
 
+    @Test
+    fun datatunnelProduceSqlTest() {
+        val sql = """
+            datatunnel source("mysql") options(
+            username="dataworks",
+            password="dataworks2021",
+            host='10.5.20.20',
+            port=3306,
+            databaseName='dataworks', tableName='dc_dtunnel_datasource', columns=["*"])
+            sink("hive") options(databaseName="bigdata", tableName='hive_dtunnel_datasource', writeMode='overwrite', columns=["*"]);
+        """.trimIndent()
+        val formatSql = SparkSqlFormatter.formatSql(sql)
+        val expected = """
+            |DATATUNNEL SOURCE("mysql") OPTIONS(
+            |  username = "dataworks",
+            |  password = "dataworks2021",
+            |  host = '10.5.20.20',
+            |  port = 3306,
+            |  databaseName = 'dataworks',
+            |  tableName = 'dc_dtunnel_datasource',
+            |  columns = ["*"]
+            |)
+            |SINK("mysql") OPTIONS(
+            |  databaseName = "bigdata",
+            |  tableName = 'hive_dtunnel_datasource',
+            |  writeMode = 'overwrite',
+            |  columns = ["*"]
+            |)
+        """.trimMargin()
+        Assert.assertEquals(expected, formatSql)
+    }
+
+    @Test
+    fun datatunnelProduceSqlTest1() {
+        val sql = """
+            datatunnel 
+            source('mysql') options(
+                username='dataworks',
+                password='dataworks2021',
+                host='10.5.20.20',
+                port=3306,
+                resultTableName='tdl_dc_job',
+                databaseName='dataworks', tableName='dc_job', columns=['*'])
+            transform = 'select * from tdl_dc_job where type="spark_sql"'
+            sink('log') options(numRows = 10)
+        """.trimIndent()
+        val formatSql = SparkSqlFormatter.formatSql(sql)
+        val expected = """
+            |DATATUNNEL SOURCE('mysql') OPTIONS(
+            |  username = 'dataworks',
+            |  password = 'dataworks2021',
+            |  host = '10.5.20.20',
+            |  port = 3306,
+            |  resultTableName = 'tdl_dc_job',
+            |  databaseName = 'dataworks',
+            |  tableName = 'dc_job',
+            |  columns = ['*']
+            |)
+            |TRANSFORM = 'select * from tdl_dc_job where type="spark_sql"'
+            |SINK('mysql') OPTIONS(
+            |  numRows = 10
+            |)
+        """.trimMargin()
+        Assert.assertEquals(expected, formatSql)
+    }
 }

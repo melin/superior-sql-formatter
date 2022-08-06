@@ -1343,6 +1343,49 @@ class FormatterVisitor(val builder: StringBuilder) : SparkSqlParserBaseVisitor<V
         return null
     }
 
+    override fun visitDtunnelExpr(ctx: DtunnelExprContext): Void? {
+//DATATUNNEL SOURCE LEFT_PAREN srcName=STRING RIGHT_PAREN OPTIONS
+//        readOpts=dtPropertyList
+//        (TRANSFORM EQ transfromSql=STRING)?
+//        SINK LEFT_PAREN distName=STRING RIGHT_PAREN
+//        (OPTIONS writeOpts=dtPropertyList)?
+
+        builder.append("DATATUNNEL SOURCE(").append(ctx.srcName.text).append(") OPTIONS")
+        joinChild(ctx.readOpts.dtProperty(), "(\n" + INDENT, "\n)", ",\n" + INDENT)
+        builder.append("\n")
+        if (ctx.TRANSFORM() != null) {
+            builder.append("TRANSFORM = ").append(ctx.transfromSql.text).append("\n");
+        }
+        builder.append("SINK(").append(ctx.srcName.text).append(") OPTIONS")
+        joinChild(ctx.writeOpts.dtProperty(), "(\n" + INDENT, "\n)", ",\n" + INDENT)
+        return null
+    }
+
+    override fun visitDtProperty(ctx: DtPropertyContext): Void? {
+        visit(ctx.key)
+        builder.append(" = ")
+        visit(ctx.value)
+        return null
+    }
+
+    override fun visitDtPropertyKey(ctx: DtPropertyKeyContext): Void? {
+        if (ctx.multipartIdentifier() != null) {
+            visit(ctx.multipartIdentifier())
+        } else {
+            builder.append(ctx.STRING().text)
+        }
+        return null
+    }
+
+    override fun visitDtPropertyValue(ctx: DtPropertyValueContext): Void? {
+        if (ctx.LEFT_BRACKET() != null) {
+            joinChild(ctx.dtPropertyValue(), "[", "]")
+        } else {
+            builder.append(ctx.text)
+        }
+        return null
+    }
+
     override fun visitNamedArgument(ctx: NamedArgumentContext): Void? {
         visit(ctx.identifier())
         builder.append(" => ")

@@ -260,7 +260,7 @@ dtProperty
     ;
 
 dtPropertyKey
-    : identifier ('.' identifier)*
+    : multipartIdentifier
     | STRING
     ;
 
