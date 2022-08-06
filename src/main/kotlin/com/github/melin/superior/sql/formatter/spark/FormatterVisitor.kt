@@ -1352,6 +1352,11 @@ class FormatterVisitor(val builder: StringBuilder) : SparkSqlParserBaseVisitor<V
         return null
     }
 
+    override fun visitInsertOverwriteTable(ctx: InsertOverwriteTableContext): Void? {
+        iteratorChild(ctx.children)
+        return null
+    }
+
     override fun visitPartitionSpec(ctx: PartitionSpecContext): Void? {
         builder.append("PARTITION")
         joinChild(ctx.partitionVal())

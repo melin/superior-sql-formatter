@@ -100,4 +100,41 @@ class SparkCudSqlFormatterTest {
         """.trimMargin()
         Assert.assertEquals(expected, formatSql)
     }
+
+    @Test
+    fun insertTableSqlTest6() {
+        val sql = """
+            INSERT INTO students PARTITION (student_id = 11215017) (address, name)
+            VALUES
+            (
+            'Hangzhou, China', 'Kent Yao Jr.'
+            );
+        """.trimIndent()
+        val formatSql = SparkSqlFormatter.formatSql(sql)
+        val expected = """
+            |INSERT INTO students PARTITION(student_id = 11215017) (address, name)
+            |VALUES
+            |  ('Hangzhou, China', 'Kent Yao Jr.')
+        """.trimMargin()
+        Assert.assertEquals(expected, formatSql)
+    }
+
+    @Test
+    fun insertTableSqlTest7() {
+        val sql = """
+            INSERT OVERWRITE students PARTITION (student_id = 222222)
+            SELECT name, address FROM persons WHERE name = "Dora Williams";
+        """.trimIndent()
+        val formatSql = SparkSqlFormatter.formatSql(sql)
+        val expected = """
+            |INSERT OVERWRITE students PARTITION(student_id = 222222)
+            |SELECT
+            |  name,
+            |  address
+            |FROM persons
+            |WHERE
+            |  name = "Dora Williams"
+        """.trimMargin()
+        Assert.assertEquals(expected, formatSql)
+    }
 }
