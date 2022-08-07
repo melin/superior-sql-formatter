@@ -5,7 +5,7 @@
     <modelVersion>4.0.0</modelVersion>
 
     <artifactId>superior-sql-formatter</artifactId>
-    <groupId>com.github.melin.superior.sql.formatter</groupId>
+    <groupId>io.github.melin.superior.sql.formatter</groupId>
     <version>1.0-SNAPSHOT</version>
     <packaging>jar</packaging>
 
