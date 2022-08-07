@@ -225,4 +225,162 @@ class SparkDdlSqlFormatterTest {
         """.trimMargin()
         Assert.assertEquals(expected, formatSql)
     }
+
+    @Test
+    fun addColumnsTest1() {
+        val sql = """
+            ALTER table StudentInfo ADD columns (LastName string, DOB timestamp);
+        """.trimIndent()
+        val formatSql = SparkSqlFormatter.formatSql(sql)
+        val expected = """
+            |ALTER TABLE ADD COLUMNS(
+            |  LastName string,
+            |  DOB timestamp
+            |)
+        """.trimMargin()
+        Assert.assertEquals(expected, formatSql)
+    }
+
+    @Test
+    fun dropColumnsTest1() {
+        val sql = """
+            ALTER table StudentInfo DROP columns (LastName, DOB);
+        """.trimIndent()
+        val formatSql = SparkSqlFormatter.formatSql(sql)
+        val expected = """
+            |ALTER TABLE StudentInfo DROP COLUMNS (LastName, DOB)
+        """.trimMargin()
+        Assert.assertEquals(expected, formatSql)
+    }
+
+    @Test
+    fun addPartitionsTest1() {
+        val sql = """
+            ALTER TABLE StudentInfo ADD IF NOT EXISTS PARTITION (age=18) PARTITION (age=20);
+        """.trimIndent()
+        val formatSql = SparkSqlFormatter.formatSql(sql)
+        val expected = """
+            |ALTER TABLE StudentInfo ADD IF NOT EXISTS
+            |  PARTITION(age = 18)
+            |  PARTITION(age = 20)
+        """.trimMargin()
+        Assert.assertEquals(expected, formatSql)
+    }
+
+    @Test
+    fun addColumnTest1() {
+        val sql = """
+            ALTER TABLE StudentInfo ALTER COLUMN FirstName COMMENT "new comment";
+        """.trimIndent()
+        val formatSql = SparkSqlFormatter.formatSql(sql)
+        val expected = """
+            |ALTER TABLE StudentInfo ALTER COLUMN FirstName COMMENT "new comment"
+        """.trimMargin()
+        Assert.assertEquals(expected, formatSql)
+    }
+
+    @Test
+    fun addColumnTest2() {
+        val sql = """
+            ALTER TABLE StudentInfo REPLACE COLUMNS (name string, ID int COMMENT 'new comment');
+        """.trimIndent()
+        val formatSql = SparkSqlFormatter.formatSql(sql)
+        val expected = """
+            |ALTER TABLE StudentInfo REPLACE COLUMNS (
+            |  name string,
+            |  ID int COMMENT 'new comment'
+            |)
+        """.trimMargin()
+        Assert.assertEquals(expected, formatSql)
+    }
+
+    @Test
+    fun addColumnTest3() {
+        val sql = """
+            ALTER TABLE employee CHANGE name ename String;
+        """.trimIndent()
+        val formatSql = SparkSqlFormatter.formatSql(sql)
+        val expected = """
+            |ALTER TABLE employee CHANGE name ename String
+        """.trimMargin()
+        Assert.assertEquals(expected, formatSql)
+    }
+
+    @Test
+    fun alterViewTest1() {
+        val sql = """
+            ALTER VIEW tempdb1.v2 AS SELECT * FROM tempdb1.v1;
+        """.trimIndent()
+        val formatSql = SparkSqlFormatter.formatSql(sql)
+        val expected = """
+            |ALTER VIEW tempdb1.v2 AS
+            |  SELECT *
+            |  FROM tempdb1.v1
+        """.trimMargin()
+        Assert.assertEquals(expected, formatSql)
+    }
+
+    @Test
+    fun alterViewTest2() {
+        val sql = """
+            ALTER VIEW tempdb1.v2 SET TBLPROPERTIES ('created.by.user' = "John", 'created.date' = '01-01-2001' );
+        """.trimIndent()
+        val formatSql = SparkSqlFormatter.formatSql(sql)
+        val expected = """
+            |ALTER VIEW tempdb1.v2 SET TBLPROPERTIES(
+            |  'created.by.user' = "John",
+            |  'created.date' = '01-01-2001'
+            |)
+        """.trimMargin()
+        Assert.assertEquals(expected, formatSql)
+    }
+
+    @Test
+    fun createViewTest1() {
+        val sql = """
+            CREATE OR REPLACE VIEW experienced_employee
+            (ID COMMENT 'Unique identification number', Name) 
+            COMMENT 'View for experienced employees'
+            AS SELECT id, name FROM all_employee
+                WHERE working_years > 5;
+        """.trimIndent()
+        val formatSql = SparkSqlFormatter.formatSql(sql)
+        val expected = """
+            |CREATE OR REPLACE VIEW experienced_employee(
+            |  ID COMMENT 'Unique identification number',
+            |  Name
+            |)
+            |COMMENT 'View for experienced employees'
+            |AS
+            |  SELECT
+            |    id,
+            |    name
+            |  FROM all_employee
+            |  WHERE
+            |    working_years > 5
+        """.trimMargin()
+        Assert.assertEquals(expected, formatSql)
+    }
+
+    @Test
+    fun createViewTest2() {
+        val sql = """
+            CREATE GLOBAL TEMPORARY VIEW IF NOT EXISTS subscribed_movies 
+            AS SELECT mo.member_id, mb.full_name, mo.movie_title
+                FROM movies AS mo INNER JOIN members AS mb 
+                ON mo.member_id = mb.id;
+        """.trimIndent()
+        val formatSql = SparkSqlFormatter.formatSql(sql)
+        val expected = """
+            |CREATE GLOBAL TEMPORARY VIEW IF NOT EXISTS subscribed_movies
+            |AS
+            |  SELECT
+            |    mo.member_id,
+            |    mb.full_name,
+            |    mo.movie_title
+            |  FROM movies AS mo  
+            |  INNER JOIN members AS mb ON mo.member_id = mb.id
+        """.trimMargin()
+        Assert.assertEquals(expected, formatSql)
+    }
 }
