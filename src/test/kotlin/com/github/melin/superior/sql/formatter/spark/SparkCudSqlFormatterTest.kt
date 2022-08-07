@@ -168,7 +168,7 @@ class SparkCudSqlFormatterTest {
         """.trimIndent()
         val formatSql = SparkSqlFormatter.formatSql(sql)
         val expected = """
-            |DELETE FROM hudi_mor_tbl 
+            |DELETE FROM hudi_mor_tbl
             |WHERE
             |  id % 2 = 0
         """.trimMargin()
@@ -187,6 +187,72 @@ class SparkCudSqlFormatterTest {
             |  ts = 1111
             |WHERE
             |  id = 1
+        """.trimMargin()
+        Assert.assertEquals(expected, formatSql)
+    }
+
+    @Test
+    fun mergeUpdateSqlTest1() {
+        val sql = """
+            merge into hudi_mor_tbl as target
+            using merge_source as source
+            on target.id = source.id
+            when matched then update set *
+            when not matched then insert *;
+        """.trimIndent()
+        val formatSql = SparkSqlFormatter.formatSql(sql)
+        val expected = """
+            |MERGE INTO hudi_mor_tbl AS target 
+            |USING merge_source AS source
+            |ON target.id = source.id
+            |WHEN MATCHED THEN
+            |  UPDATE SET *
+            |WHEN NOT MATCHED THEN
+            |  INSERT *
+        """.trimMargin()
+        Assert.assertEquals(expected, formatSql)
+    }
+
+    @Test
+    fun mergeUpdateSqlTest2() {
+        val sql = """
+            merge into hudi_cow_pt_tbl as target
+            using (
+              select id, name, '1000' as ts, flag, dt, hh from merge_source2
+            ) source
+            on target.id = source.id
+            when matched and flag != 'delete' then
+             update set id = source.id, name = source.name, ts = source.ts, dt = source.dt, hh = source.hh
+            when matched and flag = 'delete' then delete
+            when not matched then
+             insert (id, name, ts, dt, hh) values(source.id, source.name, source.ts, source.dt, source.hh);
+        """.trimIndent()
+        val formatSql = SparkSqlFormatter.formatSql(sql)
+        val expected = """
+            |MERGE INTO hudi_cow_pt_tbl AS target 
+USING (
+  SELECT
+    id,
+    name,
+    '1000' AS ts,
+    flag,
+    dt,
+    hh
+  FROM merge_source2
+) source
+ON target.id = source.id
+WHEN MATCHED AND flag != 'delete' THEN
+  UPDATE SET
+    id = source.id,
+  name = source.name,
+  ts = source.ts,
+  dt = source.dt,
+  hh = source.hh
+
+WHEN MATCHED AND flag = 'delete' THEN
+  DELETE
+WHEN NOT MATCHED THEN
+  INSERT (idnametsdthh) VALUES (source.id, source.name, source.ts, source.dt, source.hh)
         """.trimMargin()
         Assert.assertEquals(expected, formatSql)
     }

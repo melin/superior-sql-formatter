@@ -1489,8 +1489,9 @@ class FormatterVisitor(val builder: StringBuilder) : SparkSqlParserBaseVisitor<V
     override fun visitDeleteFromTable(ctx: DeleteFromTableContext): Void? {
         builder.append("DELETE FROM ")
         visit(ctx.multipartIdentifier())
-        builder.append(" ")
-        visit(ctx.tableAlias())
+        if (ctx.tableAlias().children != null) {
+            visit(ctx.tableAlias())
+        }
         if (ctx.whereClause() != null) {
             visit(ctx.whereClause())
         }
@@ -1515,7 +1516,7 @@ class FormatterVisitor(val builder: StringBuilder) : SparkSqlParserBaseVisitor<V
     }
 
     override fun visitAssignmentList(ctx: AssignmentListContext): Void? {
-        builder.append(INDENT)
+        append(indent, INDENT)
         joinChild(ctx.assignment(), "", "", ",\n" + INDENT)
         return null
     }
@@ -1524,6 +1525,87 @@ class FormatterVisitor(val builder: StringBuilder) : SparkSqlParserBaseVisitor<V
         visit(ctx.key)
         builder.append(" = ")
         visit(ctx.value)
+        return null
+    }
+
+    override fun visitMergeIntoTable(ctx: MergeIntoTableContext): Void? {
+        builder.append("MERGE INTO ")
+        visit(ctx.target)
+        if (ctx.targetAlias.children != null) {
+            visit(ctx.targetAlias)
+            builder.append(" ")
+        }
+
+        builder.append("\nUSING ")
+        if (ctx.source != null) {
+            visit(ctx.source)
+        } else {
+            builder.append("(")
+            visit(ctx.sourceQuery)
+            builder.append(")")
+        }
+
+        if (ctx.sourceAlias.children != null) {
+            visit(ctx.sourceAlias)
+        }
+
+        builder.append("\nON ")
+        visit(ctx.mergeCondition)
+        joinChild(ctx.matchedClause(), "", "", "\n")
+        joinChild(ctx.notMatchedClause(), "", "", "\n")
+
+        return null
+    }
+
+    override fun visitMatchedClause(ctx: MatchedClauseContext): Void? {
+        builder.append("\nWHEN MATCHED ")
+        if (ctx.matchedCond != null) {
+            builder.append("AND ")
+            visit(ctx.matchedCond)
+            builder.append(" ")
+        }
+        builder.append("THEN\n")
+        indent++
+        visit(ctx.matchedAction())
+        indent--
+        return null
+    }
+
+    override fun visitNotMatchedClause(ctx: NotMatchedClauseContext): Void? {
+        builder.append("\nWHEN NOT MATCHED ")
+        if (ctx.notMatchedCond != null) {
+            builder.append("AND ")
+            visit(ctx.notMatchedCond)
+            builder.append(" ")
+        }
+        builder.append("THEN\n")
+        indent++
+        visit(ctx.notMatchedAction())
+        indent--
+        return null
+    }
+
+    override fun visitMatchedAction(ctx: MatchedActionContext): Void? {
+        if (ctx.DELETE() != null) {
+            append(indent, "DELETE")
+        } else if (ctx.ASTERISK() != null) {
+            append(indent, "UPDATE SET *")
+        } else {
+            append(indent, "UPDATE SET\n")
+            visit(ctx.assignmentList())
+        }
+        return null
+    }
+
+    override fun visitNotMatchedAction(ctx: NotMatchedActionContext): Void? {
+        if (ctx.ASTERISK() != null) {
+            append(indent, "INSERT *")
+        } else {
+            append(indent, "INSERT (")
+            visit(ctx.multipartIdentifierList())
+            builder.append(") VALUES ")
+            joinChild(ctx.expression())
+        }
         return null
     }
 
