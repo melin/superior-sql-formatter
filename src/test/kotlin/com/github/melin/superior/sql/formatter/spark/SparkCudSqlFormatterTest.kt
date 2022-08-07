@@ -230,29 +230,28 @@ class SparkCudSqlFormatterTest {
         val formatSql = SparkSqlFormatter.formatSql(sql)
         val expected = """
             |MERGE INTO hudi_cow_pt_tbl AS target 
-USING (
-  SELECT
-    id,
-    name,
-    '1000' AS ts,
-    flag,
-    dt,
-    hh
-  FROM merge_source2
-) source
-ON target.id = source.id
-WHEN MATCHED AND flag != 'delete' THEN
-  UPDATE SET
-    id = source.id,
-  name = source.name,
-  ts = source.ts,
-  dt = source.dt,
-  hh = source.hh
-
-WHEN MATCHED AND flag = 'delete' THEN
-  DELETE
-WHEN NOT MATCHED THEN
-  INSERT (idnametsdthh) VALUES (source.id, source.name, source.ts, source.dt, source.hh)
+            |USING (
+            |  SELECT
+            |    id,
+            |    name,
+            |    '1000' AS ts,
+            |    flag,
+            |    dt,
+            |    hh
+            |  FROM merge_source2
+            |) source
+            |ON target.id = source.id
+            |WHEN MATCHED AND flag != 'delete' THEN
+            |  UPDATE SET
+            |    id = source.id,
+            |    name = source.name,
+            |    ts = source.ts,
+            |    dt = source.dt,
+            |    hh = source.hh
+            |WHEN MATCHED AND flag = 'delete' THEN
+            |  DELETE
+            |WHEN NOT MATCHED THEN
+            |  INSERT (idnametsdthh) VALUES (source.id, source.name, source.ts, source.dt, source.hh)
         """.trimMargin()
         Assert.assertEquals(expected, formatSql)
     }

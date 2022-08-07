@@ -1516,8 +1516,17 @@ class FormatterVisitor(val builder: StringBuilder) : SparkSqlParserBaseVisitor<V
     }
 
     override fun visitAssignmentList(ctx: AssignmentListContext): Void? {
-        append(indent, INDENT)
-        joinChild(ctx.assignment(), "", "", ",\n" + INDENT)
+        var first = true
+        ctx.assignment().forEach {child ->
+            if (first) {
+                append(indent, INDENT)
+                first = false
+            } else {
+                builder.append(",\n")
+                append(indent, INDENT)
+            }
+            visit(child)
+        }
         return null
     }
 
@@ -1551,9 +1560,8 @@ class FormatterVisitor(val builder: StringBuilder) : SparkSqlParserBaseVisitor<V
 
         builder.append("\nON ")
         visit(ctx.mergeCondition)
-        joinChild(ctx.matchedClause(), "", "", "\n")
-        joinChild(ctx.notMatchedClause(), "", "", "\n")
-
+        joinChild(ctx.matchedClause(), "", "", "")
+        joinChild(ctx.notMatchedClause(), "", "", "")
         return null
     }
 
@@ -1659,7 +1667,6 @@ class FormatterVisitor(val builder: StringBuilder) : SparkSqlParserBaseVisitor<V
     }
 
     override fun visitColType(ctx: ColTypeContext): Void? {
-        //colName=errorCapturingIdentifier dataType (NOT NULL)? commentSpec?
         joinChild(ctx.children, "", "", " ")
         return null
     }
