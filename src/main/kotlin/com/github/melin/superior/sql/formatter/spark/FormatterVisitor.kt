@@ -1487,7 +1487,6 @@ class FormatterVisitor(val builder: StringBuilder) : SparkSqlParserBaseVisitor<V
     }
 
     override fun visitDeleteFromTable(ctx: DeleteFromTableContext): Void? {
-        // DELETE FROM multipartIdentifier tableAlias whereClause?
         builder.append("DELETE FROM ")
         visit(ctx.multipartIdentifier())
         builder.append(" ")
@@ -1495,6 +1494,36 @@ class FormatterVisitor(val builder: StringBuilder) : SparkSqlParserBaseVisitor<V
         if (ctx.whereClause() != null) {
             visit(ctx.whereClause())
         }
+        return null
+    }
+
+    override fun visitUpdateTable(ctx: UpdateTableContext): Void? {
+        builder.append("UPDATE ")
+        visit(ctx.multipartIdentifier())
+        builder.append(" ")
+        if (ctx.tableAlias().children != null) {
+            visit(ctx.tableAlias())
+            builder.append(" ")
+        }
+        builder.append("SET\n")
+        visit(ctx.setClause())
+        if (ctx.whereClause() != null) {
+            visit(ctx.whereClause())
+        }
+
+        return null
+    }
+
+    override fun visitAssignmentList(ctx: AssignmentListContext): Void? {
+        builder.append(INDENT)
+        joinChild(ctx.assignment(), "", "", ",\n" + INDENT)
+        return null
+    }
+
+    override fun visitAssignment(ctx: AssignmentContext): Void? {
+        visit(ctx.key)
+        builder.append(" = ")
+        visit(ctx.value)
         return null
     }
 

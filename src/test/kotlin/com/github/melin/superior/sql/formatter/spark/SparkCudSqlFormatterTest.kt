@@ -174,4 +174,20 @@ class SparkCudSqlFormatterTest {
         """.trimMargin()
         Assert.assertEquals(expected, formatSql)
     }
+
+    @Test
+    fun updateSqlTest1() {
+        val sql = """
+            update hudi_mor_tbl set price = price * 2, ts = 1111 where id = 1;
+        """.trimIndent()
+        val formatSql = SparkSqlFormatter.formatSql(sql)
+        val expected = """
+            |UPDATE hudi_mor_tbl SET
+            |  price = price * 2,
+            |  ts = 1111
+            |WHERE
+            |  id = 1
+        """.trimMargin()
+        Assert.assertEquals(expected, formatSql)
+    }
 }
