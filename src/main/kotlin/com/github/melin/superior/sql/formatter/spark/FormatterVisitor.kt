@@ -1709,6 +1709,47 @@ class FormatterVisitor(val builder: StringBuilder) : SparkSqlParserBaseVisitor<V
         return null
     }
 
+    override fun visitUse(ctx: UseContext): Void? {
+        builder.append("USE ")
+        visit(ctx.multipartIdentifier())
+        return null
+    }
+
+    override fun visitUseNamespace(ctx: UseNamespaceContext): Void? {
+        builder.append("USE ").append(ctx.namespace().text.uppercase()).append(" ")
+        visit(ctx.multipartIdentifier())
+        return null
+    }
+
+    override fun visitSetCatalog(ctx: SetCatalogContext): Void? {
+        builder.append("SET CATALOG ")
+        if (ctx.STRING() != null) {
+            builder.append(ctx.STRING().text)
+        } else {
+            visit(ctx.identifier())
+        }
+        return null
+    }
+
+    override fun visitSetConfiguration(ctx: SetConfigurationContext): Void? {
+        ctx.children.forEach { child ->
+            val text = child.text
+            if ("SET".equals(text.uppercase())) {
+                builder.append("SET ")
+            } else if ("=".equals(text)) {
+                builder.append(" = ")
+            } else {
+                builder.append(text)
+            }
+        }
+        return null
+    }
+
+    override fun visitSetQuotedConfiguration(ctx: SetQuotedConfigurationContext): Void? {
+        builder.append(ctx.configKey().text).append(" = ").append(ctx.configValue().text)
+        return null
+    }
+
     //-----------------------private method-------------------------------------
 
     private fun iteratorChild(children: List<ParseTree>, uppercase: Boolean = true,

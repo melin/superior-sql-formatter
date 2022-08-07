@@ -74,4 +74,16 @@ class SparkDdlSqlFormatterTest {
         """.trimMargin()
         Assert.assertEquals(expected, formatSql)
     }
+
+    @Test
+    fun setConfigTest() {
+        val sql = """
+            set spark.sql.test=dsdfs
+        """.trimIndent()
+        val formatSql = SparkSqlFormatter.formatSql(sql)
+        val expected = """
+            |SET spark.sql.test = dsdfs
+        """.trimMargin()
+        Assert.assertEquals(expected, formatSql)
+    }
 }
