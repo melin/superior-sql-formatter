@@ -119,6 +119,30 @@ class SparkDdlSqlFormatterTest {
     }
 
     @Test
+    fun showCreateTableTest() {
+        val sql = """
+            SHOW CREATE table test AS SERDE;
+        """.trimIndent()
+        val formatSql = SparkSqlFormatter.formatSql(sql)
+        val expected = """
+            |SHOW CREATE TABLE test AS SERDE
+        """.trimMargin()
+        Assert.assertEquals(expected, formatSql)
+    }
+
+    @Test
+    fun showViewsTest() {
+        val sql = """
+            show views LIKE 'sam|suj|temp*';
+        """.trimIndent()
+        val formatSql = SparkSqlFormatter.formatSql(sql)
+        val expected = """
+            |SHOW VIEWS LIKE 'sam|suj|temp*'
+        """.trimMargin()
+        Assert.assertEquals(expected, formatSql)
+    }
+
+    @Test
     fun alterDatabasePropsTest() {
         val sql = """
             ALTER database inventory SET DBPROPERTIES ('Edited-by' = 'John', 'Edit-date' = '01/01/2001');

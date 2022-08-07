@@ -1853,15 +1853,414 @@ class FormatterVisitor(val builder: StringBuilder) : SparkSqlParserBaseVisitor<V
         return null
     }
 
-    //replaceTableHeader
-    //    : (CREATE OR)? REPLACE TABLE multipartIdentifier
-    //    ;
     override fun visitReplaceTableHeader(ctx: ReplaceTableHeaderContext): Void? {
         if (ctx.CREATE() != null) {
             builder.append("CREATE OR ")
         }
         builder.append("REPLACE TABLE ")
         visit(ctx.multipartIdentifier())
+        return null
+    }
+
+    //| ANALYZE TABLE multipartIdentifier partitionSpec? COMPUTE STATISTICS
+    //        (identifier | FOR COLUMNS identifierSeq | FOR ALL COLUMNS)?    #analyze
+    override fun visitAnalyze(ctx: AnalyzeContext): Void? {
+        return null
+    }
+    //    | ANALYZE TABLES ((FROM | IN) multipartIdentifier)? COMPUTE STATISTICS
+    //        (identifier)?                                                  #analyzeTables
+    override fun visitAnalyzeTables(ctx: AnalyzeTablesContext): Void? {
+        return null
+    }
+
+    //ALTER TABLE multipartIdentifier
+    //        ADD (COLUMN | COLUMNS)
+    //        columns=qualifiedColTypeWithPositionList                       #addTableColumns
+    //    | ALTER TABLE multipartIdentifier
+    //        ADD (COLUMN | COLUMNS)
+    //        LEFT_PAREN columns=qualifiedColTypeWithPositionList RIGHT_PAREN #addTableColumns
+    override fun visitAddTableColumns(ctx: AddTableColumnsContext): Void? {
+        return null
+    }
+
+    //    | ALTER TABLE multipartIdentifier
+    //        DROP (COLUMN | COLUMNS) (IF EXISTS)?
+    //        LEFT_PAREN columns=multipartIdentifierList RIGHT_PAREN         #dropTableColumns
+    // | ALTER TABLE multipartIdentifier
+    //    //        DROP (COLUMN | COLUMNS) (IF EXISTS)?
+    //    //        columns=multipartIdentifierList
+    override fun visitDropTableColumns(ctx: DropTableColumnsContext): Void? {
+        return null
+    }
+
+    //    | ALTER TABLE table=multipartIdentifier
+    //        RENAME COLUMN
+    //        from=multipartIdentifier TO to=errorCapturingIdentifier        #renameTableColumn
+    override fun visitRenameTableColumn(ctx: RenameTableColumnContext): Void? {
+        return null
+    }
+
+
+    //    | ALTER (TABLE | VIEW) from=multipartIdentifier
+    //        RENAME TO to=multipartIdentifier                               #renameTable
+    override fun visitRenameTable(ctx: RenameTableContext): Void? {
+        return null
+    }
+
+    //    | ALTER TABLE table=multipartIdentifier
+    //        TOUCH partitionSpec?                                           #touchTable
+    override fun visitTouchTable(ctx: TouchTableContext): Void? {
+        return null
+    }
+
+    //    | ALTER (TABLE | VIEW) multipartIdentifier
+    //        SET TBLPROPERTIES propertyList                                 #setTableProperties
+    override fun visitSetTableProperties(ctx: SetTablePropertiesContext): Void? {
+        return null
+    }
+
+    //    | ALTER (TABLE | VIEW) multipartIdentifier
+    //        UNSET TBLPROPERTIES (IF EXISTS)? propertyList                  #unsetTableProperties
+    override fun visitUnsetTableProperties(ctx: UnsetTablePropertiesContext): Void? {
+        return null
+    }
+    //    | ALTER TABLE table=multipartIdentifier
+    //        (ALTER | CHANGE) COLUMN? column=multipartIdentifier
+    //        alterColumnAction?                                             #alterTableAlterColumn
+    override fun visitAlterTableAlterColumn(ctx: AlterTableAlterColumnContext): Void? {
+        return null
+    }
+
+    //| ALTER (TABLE | VIEW) multipartIdentifier ADD (IF NOT EXISTS)?
+    //        partitionSpecLocation+                                         #addTablePartition
+    override fun visitAddTablePartition(ctx: AddTablePartitionContext): Void? {
+        return null
+    }
+    //    | ALTER TABLE multipartIdentifier
+    //        from=partitionSpec RENAME TO to=partitionSpec                  #renameTablePartition
+    override fun visitRenameTablePartition(ctx: RenameTablePartitionContext): Void? {
+        return null
+    }
+
+    //    | ALTER (TABLE | VIEW) multipartIdentifier
+    //        DROP (IF EXISTS)? partitionSpec (COMMA partitionSpec)* PURGE?  #dropTablePartitions
+    override fun visitDropTablePartitions(ctx: DropTablePartitionsContext): Void? {
+        return null
+    }
+
+    //    | ALTER TABLE multipartIdentifier
+    //        (partitionSpec)? SET locationSpec                              #setTableLocation
+    override fun visitSetTableLocation(ctx: SetTableLocationContext): Void? {
+        return null
+    }
+    //    | ALTER TABLE multipartIdentifier RECOVER PARTITIONS               #recoverPartitions
+    override fun visitRecoverPartitions(ctx: RecoverPartitionsContext): Void? {
+        return null
+    }
+    //    | DROP TABLE (IF EXISTS)? multipartIdentifier PURGE?               #dropTable
+    override fun visitDropTable(ctx: DropTableContext): Void? {
+        return null
+    }
+    //    | DROP VIEW (IF EXISTS)? multipartIdentifier                       #dropView
+    override fun visitDropView(ctx: DropViewContext): Void? {
+        return null
+    }
+
+    //| CREATE (OR REPLACE)? (GLOBAL? TEMPORARY)?
+    //        VIEW (IF NOT EXISTS)? multipartIdentifier
+    //        identifierCommentList?
+    //        (commentSpec |
+    //         (PARTITIONED ON identifierList) |
+    //         (TBLPROPERTIES propertyList))*
+    //        AS query                                                       #createView
+    override fun visitCreateView(ctx: CreateViewContext): Void? {
+        return null
+    }
+
+    //    | CREATE (OR REPLACE)? GLOBAL? TEMPORARY VIEW
+    //        tableIdentifier (LEFT_PAREN colTypeList RIGHT_PAREN)? tableProvider
+    //        (OPTIONS propertyList)?                                        #createTempViewUsing
+    override fun visitCreateTempViewUsing(ctx: CreateTempViewUsingContext): Void? {
+        return null
+    }
+
+    //    | ALTER VIEW multipartIdentifier AS? query                         #alterViewQuery
+    override fun visitAlterViewQuery(ctx: AlterViewQueryContext): Void? {
+        return null
+    }
+    //    | CREATE (OR REPLACE)? TEMPORARY? FUNCTION (IF NOT EXISTS)?
+    //        multipartIdentifier AS className=STRING
+    //        (USING resource (COMMA resource)*)?                            #createFunction
+    override fun visitCreateFunction(ctx: CreateFunctionContext): Void? {
+        return null
+    }
+    //    | DROP TEMPORARY? FUNCTION (IF EXISTS)? multipartIdentifier        #dropFunction
+    override fun visitDropFunction(ctx: DropFunctionContext): Void? {
+        return null
+    }
+
+    override fun visitExplain(ctx: ExplainContext): Void? {
+        builder.append("EXPLAIN ")
+        if (ctx.LOGICAL() != null) {
+            builder.append("EXPLAIN ")
+        }
+        if (ctx.FORMATTED() != null) {
+            builder.append("FORMATTED ")
+        }
+        if (ctx.EXTENDED() != null) {
+            builder.append("EXTENDED ")
+        }
+        if (ctx.CODEGEN() != null) {
+            builder.append("CODEGEN ")
+        }
+        if (ctx.COST() != null) {
+            builder.append("COST ")
+        }
+        visit(ctx.statement())
+        return null
+    }
+
+    override fun visitShowTables(ctx: ShowTablesContext): Void? {
+        builder.append("SHOW TABLES ")
+        if (ctx.multipartIdentifier() != null) {
+            if (ctx.FROM() != null) {
+                builder.append("FROM ")
+            } else {
+                builder.append("IN ")
+            }
+            visit(ctx.multipartIdentifier())
+        }
+
+        if (ctx.LIKE() != null) {
+            builder.append(" LIKE")
+        }
+        if (ctx.pattern != null) {
+            builder.append(ctx.pattern.text)
+        }
+        return null
+    }
+
+    override fun visitShowTableExtended(ctx: ShowTableExtendedContext): Void? {
+        builder.append("SHOW TABLE EXTENDED ")
+        if (ctx.ns != null) {
+            if (ctx.FROM() != null) {
+                builder.append("FROM ")
+            } else {
+                builder.append("IN ")
+            }
+            visit(ctx.ns)
+        }
+
+        builder.append(" LIKE ").append(ctx.pattern.text)
+        if (ctx.partitionSpec() != null) {
+            builder.append(" ")
+            visit(ctx.partitionSpec())
+        }
+        return null
+    }
+
+    override fun visitShowTblProperties(ctx: ShowTblPropertiesContext): Void? {
+        builder.append("SHOW TBLPROPERTIES ")
+        visit(ctx.table)
+        if (ctx.LEFT_PAREN() != null) {
+            builder.append(" (")
+            visit(ctx.key)
+            builder.append(")")
+        }
+        return null
+    }
+
+    override fun visitShowColumns(ctx: ShowColumnsContext): Void? {
+        builder.append("SHOW COLUMNS ")
+        if (ctx.FROM() != null) {
+            builder.append("FROM ")
+        } else {
+            builder.append("IN ")
+        }
+        visit(ctx.table)
+
+        if (ctx.ns != null) {
+            builder.append(" ")
+            if (ctx.FROM() != null) {
+                builder.append("FROM ")
+            } else {
+                builder.append("IN ")
+            }
+            visit(ctx.ns)
+        }
+        return null
+    }
+
+    override fun visitShowViews(ctx: ShowViewsContext): Void? {
+        builder.append("SHOW VIEWS ")
+        if (ctx.multipartIdentifier() != null) {
+            if (ctx.FROM() != null) {
+                builder.append("FROM ")
+            } else {
+                builder.append("IN ")
+            }
+            visit(ctx.multipartIdentifier())
+            builder.append(" ")
+        }
+        if (ctx.LIKE() != null) {
+            builder.append("LIKE ")
+        }
+        if (ctx.pattern != null) {
+            builder.append(ctx.pattern.text)
+        }
+        return null
+    }
+
+    override fun visitShowPartitions(ctx: ShowPartitionsContext): Void? {
+        builder.append("SHOW PARTITIONS ")
+        visit(ctx.multipartIdentifier())
+        if (ctx.partitionSpec() != null) {
+            builder.append(" ")
+            visit(ctx.partitionSpec())
+        }
+        return null
+    }
+
+    override fun visitShowFunctions(ctx: ShowFunctionsContext): Void? {
+        builder.append("SHOW ")
+        if (ctx.identifier() != null) {
+            visit(ctx.identifier())
+            builder.append(" ")
+        }
+        builder.append("FUNCTIONS ")
+        if (ctx.ns != null) {
+            if (ctx.FROM() != null) {
+                builder.append("FROM ")
+            } else {
+                builder.append("IN ")
+            }
+            visit(ctx.ns)
+            builder.append(" ")
+        }
+
+        if (ctx.LIKE() != null) {
+            builder.append("LIKE ")
+        }
+        if (ctx.legacy != null) {
+            visit(ctx.legacy)
+        }
+        if (ctx.pattern != null) {
+            builder.append(ctx.pattern.text)
+        }
+
+        return null
+    }
+
+    override fun visitShowCreateTable(ctx: ShowCreateTableContext): Void? {
+        builder.append("SHOW CREATE TABLE ")
+        visit(ctx.multipartIdentifier())
+        if (ctx.AS() != null) {
+            builder.append(" AS SERDE")
+        }
+        return null
+    }
+
+    override fun visitShowCurrentNamespace(ctx: ShowCurrentNamespaceContext): Void? {
+        builder.append("SHOW CURRENT ").append(ctx.namespace().text)
+        return null
+    }
+
+    override fun visitShowCatalogs(ctx: ShowCatalogsContext): Void? {
+        builder.append("SHOW CATALOGS ")
+        if (ctx.LIKE() != null) {
+            builder.append("LIKE ")
+        }
+
+        if (ctx.pattern != null) {
+            builder.append(ctx.pattern.text)
+        }
+        return null
+    }
+
+    override fun visitDescribeFunction(ctx: DescribeFunctionContext): Void? {
+        if (ctx.DESC() != null) {
+            builder.append("DESC ")
+        } else {
+            builder.append("DESCRIBE ")
+        }
+        if (ctx.EXTENDED() != null) {
+            builder.append("EXTENDED ")
+        }
+        visit(ctx.describeFuncName())
+        return null
+    }
+
+    override fun visitDescribeNamespace(ctx: DescribeNamespaceContext): Void? {
+        if (ctx.DESC() != null) {
+            builder.append("DESC ")
+        } else {
+            builder.append("DESCRIBE ")
+        }
+        if (ctx.EXTENDED() != null) {
+            builder.append("EXTENDED ")
+        }
+        visit(ctx.multipartIdentifier())
+        return null
+    }
+
+    override fun visitDescribeRelation(ctx: DescribeRelationContext): Void? {
+        if (ctx.DESC() != null) {
+            builder.append("DESC ")
+        } else {
+            builder.append("DESCRIBE ")
+        }
+        if (ctx.TABLE() != null) {
+            builder.append("TABLE ")
+        }
+        if (ctx.option != null) {
+            builder.append(ctx.option.text.uppercase()).append(" ")
+        }
+        visit(ctx.multipartIdentifier())
+        if (ctx.partitionSpec() != null) {
+            builder.append(" ")
+            visit(ctx.partitionSpec())
+        }
+        if (ctx.describeColName() != null) {
+            builder.append(" ")
+            joinChild(ctx.describeColName().nameParts, "", "", ".")
+        }
+        return null
+    }
+
+    override fun visitDescribeQuery(ctx: DescribeQueryContext): Void? {
+        if (ctx.DESC() != null) {
+            builder.append("DESC ")
+        } else {
+            builder.append("DESCRIBE ")
+        }
+        if (ctx.QUERY() != null) {
+            builder.append("QUERY ")
+        }
+        visit(ctx.query())
+        return null
+    }
+
+    override fun visitCommentNamespace(ctx: CommentNamespaceContext): Void? {
+        builder.append("COMMENT ON ").append(ctx.namespace().text).append(" ")
+        visit(ctx.multipartIdentifier())
+        builder.append(" IS ")
+        if (ctx.NULL() != null) {
+            builder.append("NULL")
+        } else {
+            builder.append(ctx.comment.text)
+        }
+        return null
+    }
+
+    override fun visitCommentTable(ctx: CommentTableContext): Void? {
+        builder.append("COMMENT ON TABLE ")
+        visit(ctx.multipartIdentifier())
+        builder.append(" IS ")
+        if (ctx.NULL() != null) {
+            builder.append("NULL")
+        } else {
+            builder.append(ctx.comment.text)
+        }
         return null
     }
 
