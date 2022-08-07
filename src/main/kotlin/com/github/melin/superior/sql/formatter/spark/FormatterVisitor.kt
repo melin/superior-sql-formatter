@@ -1486,6 +1486,18 @@ class FormatterVisitor(val builder: StringBuilder) : SparkSqlParserBaseVisitor<V
         return null
     }
 
+    override fun visitDeleteFromTable(ctx: DeleteFromTableContext): Void? {
+        // DELETE FROM multipartIdentifier tableAlias whereClause?
+        builder.append("DELETE FROM ")
+        visit(ctx.multipartIdentifier())
+        builder.append(" ")
+        visit(ctx.tableAlias())
+        if (ctx.whereClause() != null) {
+            visit(ctx.whereClause())
+        }
+        return null
+    }
+
     //---------------------DDL Syntax----------------------
 
     override fun visitCreateTable(ctx: CreateTableContext): Void? {

@@ -160,4 +160,18 @@ class SparkCudSqlFormatterTest {
         """.trimMargin()
         Assert.assertEquals(expected, formatSql)
     }
+
+    @Test
+    fun deleteSqlTest1() {
+        val sql = """
+            delete from hudi_mor_tbl where id % 2 = 0;
+        """.trimIndent()
+        val formatSql = SparkSqlFormatter.formatSql(sql)
+        val expected = """
+            |DELETE FROM hudi_mor_tbl 
+            |WHERE
+            |  id % 2 = 0
+        """.trimMargin()
+        Assert.assertEquals(expected, formatSql)
+    }
 }
