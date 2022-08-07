@@ -137,4 +137,27 @@ class SparkCudSqlFormatterTest {
         """.trimMargin()
         Assert.assertEquals(expected, formatSql)
     }
+
+    @Test
+    fun mutilInsertSqlTest8() {
+        val sql = """
+            FROM staged_employees se
+            INSERT INTO TABLE us_employees
+            SELECT * WHERE se.cnty = 'US'
+            INSERT INTO TABLE ca_employees
+            SELECT * WHERE se.cnty = 'CA'
+        """.trimIndent()
+        val formatSql = SparkSqlFormatter.formatSql(sql)
+        val expected = """
+            |FROM staged_employees se
+            |INSERT INTO TABLE us_employees 
+            |SELECT *
+            |WHERE
+            |  se.cnty = 'US'INSERT INTO TABLE ca_employees 
+            |SELECT *
+            |WHERE
+            |  se.cnty = 'CA'
+        """.trimMargin()
+        Assert.assertEquals(expected, formatSql)
+    }
 }

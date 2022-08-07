@@ -107,7 +107,9 @@ class FormatterVisitor(val builder: StringBuilder) : SparkSqlParserBaseVisitor<V
     }
 
     override fun visitFromClause(ctx: FromClauseContext): Void? {
-        builder.append('\n')
+        if (!(ctx.parent is MultiInsertQueryContext)) {
+            builder.append('\n')
+        }
 
         ctx.children.forEach { child ->
             if (child is TerminalNodeImpl) {
@@ -117,6 +119,9 @@ class FormatterVisitor(val builder: StringBuilder) : SparkSqlParserBaseVisitor<V
             }
         }
 
+        if (ctx.parent is MultiInsertQueryContext) {
+            builder.append('\n')
+        }
         return null
     }
 
