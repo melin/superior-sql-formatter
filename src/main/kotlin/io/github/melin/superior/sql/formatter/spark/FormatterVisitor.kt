@@ -1862,14 +1862,43 @@ class FormatterVisitor(val builder: StringBuilder) : SparkSqlParserBaseVisitor<V
         return null
     }
 
-    //| ANALYZE TABLE multipartIdentifier partitionSpec? COMPUTE STATISTICS
-    //        (identifier | FOR COLUMNS identifierSeq | FOR ALL COLUMNS)?    #analyze
     override fun visitAnalyze(ctx: AnalyzeContext): Void? {
+        builder.append("ANALYZE TABLE ")
+        visit(ctx.multipartIdentifier())
+        builder.append(" ")
+        if (ctx.partitionSpec() != null) {
+            visit(ctx.partitionSpec())
+            builder.append(" ")
+        }
+        builder.append("COMPUTE STATISTICS ")
+        if (ctx.identifier() != null) {
+            visit(ctx.identifier())
+        } else if (ctx.identifierSeq() != null) {
+            builder.append("FOR COLUMNS ")
+            visit(ctx.identifierSeq())
+        } else if (ctx.ALL() != null) {
+            builder.append("FOR ALL COLUMNS")
+        }
         return null
     }
     //    | ANALYZE TABLES ((FROM | IN) multipartIdentifier)? COMPUTE STATISTICS
     //        (identifier)?                                                  #analyzeTables
     override fun visitAnalyzeTables(ctx: AnalyzeTablesContext): Void? {
+        builder.append("ANALYZE TABLES ")
+        if (ctx.multipartIdentifier() != null) {
+            if (ctx.FROM() != null) {
+                builder.append("FROM ")
+            } else {
+                builder.append("IN ")
+            }
+            visit(ctx.multipartIdentifier())
+            builder.append(" ")
+        }
+        builder.append("COMPUTE STATISTICS ")
+        if (ctx.identifier() != null) {
+            visit(ctx.identifier())
+        }
+
         return null
     }
 

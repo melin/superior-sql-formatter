@@ -201,4 +201,28 @@ class SparkDdlSqlFormatterTest {
         """.trimMargin()
         Assert.assertEquals(expected, formatSql)
     }
+
+    @Test
+    fun analyzeTest() {
+        val sql = """
+            ANALYZE table students COMPUTE STATISTICS FOR COLUMNS name;
+        """.trimIndent()
+        val formatSql = SparkSqlFormatter.formatSql(sql)
+        val expected = """
+            |ANALYZE TABLE students COMPUTE STATISTICS FOR COLUMNS name
+        """.trimMargin()
+        Assert.assertEquals(expected, formatSql)
+    }
+
+    @Test
+    fun analyzeTest1() {
+        val sql = """
+            ANALYZE tables IN school_db COMPUTE STATISTICS NOSCAN;
+        """.trimIndent()
+        val formatSql = SparkSqlFormatter.formatSql(sql)
+        val expected = """
+            |ANALYZE TABLES IN school_db COMPUTE STATISTICS NOSCAN
+        """.trimMargin()
+        Assert.assertEquals(expected, formatSql)
+    }
 }
