@@ -1421,7 +1421,11 @@ class FormatterVisitor(val builder: StringBuilder) : SparkSqlParserBaseVisitor<V
     }
 
     override fun visitPropertyKey(ctx: PropertyKeyContext): Void? {
-        iteratorChild(ctx.children, false, " ", "")
+        if (ctx.STRING() != null) {
+            builder.append(ctx.STRING().text)
+        } else {
+            joinChild(ctx.identifier(), "", "", ".")
+        }
         return null
     }
 
@@ -1533,11 +1537,6 @@ class FormatterVisitor(val builder: StringBuilder) : SparkSqlParserBaseVisitor<V
     }
 
     override fun visitCreateTableClauses(ctx: CreateTableClausesContext): Void? {
-        if (ctx.OPTIONS().size > 0) {
-            builder.append("\nOPTIONS")
-            visit(ctx.options)
-        }
-
         if (ctx.primaryKeyExpr().size > 0) {
             visit(ctx.primaryKeyExpr().get(0))
         }
@@ -1545,8 +1544,22 @@ class FormatterVisitor(val builder: StringBuilder) : SparkSqlParserBaseVisitor<V
             builder.append("\nPARTITIONED BY ")
             joinChild(ctx.partitionFieldList())
         }
+        if (ctx.locationSpec().size > 0) {
+            builder.append("\nLOCATION ").append(ctx.locationSpec().get(0).STRING().text)
+        }
         if (ctx.LIFECYCLE().size > 0) {
             builder.append("\nLIFECYCLE ").append(ctx.lifecycle.text)
+        }
+        if (ctx.OPTIONS().size > 0) {
+            builder.append("\nOPTIONS")
+            joinChild(ctx.options.property(), "(\n" + INDENT, "\n)", ",\n" + INDENT)
+        }
+        if (ctx.TBLPROPERTIES().size > 0) {
+            builder.append("\nTBLPROPERTIES ")
+            joinChild(ctx.tableProps.property(), "(\n" + INDENT, "\n)", ",\n" + INDENT)
+        }
+        if (ctx.commentSpec().size > 0) {
+            builder.append("\nCOMMENT ").append(ctx.commentSpec().get(0).STRING().text)
         }
 
         return null

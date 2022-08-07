@@ -51,6 +51,8 @@ class SparkDdlSqlFormatterTest {
             using hudi    
             primary key (id)
             partitioned by (ds)
+            COMMENT 'this is a comment'
+            TBLPROPERTIES ('foo'='bar')
             lifeCycle 300;
         """.trimIndent()
         val formatSql = SparkSqlFormatter.formatSql(sql)
@@ -65,6 +67,10 @@ class SparkDdlSqlFormatterTest {
             |PRIMARY KEY (id)
             |PARTITIONED BY (ds)
             |LIFECYCLE 300
+            |TBLPROPERTIES (
+            |  'foo' = 'bar'
+            |)
+            |COMMENT 'this is a comment'
         """.trimMargin()
         Assert.assertEquals(expected, formatSql)
     }
