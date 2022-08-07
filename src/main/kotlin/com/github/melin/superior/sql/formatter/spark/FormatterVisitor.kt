@@ -1750,6 +1750,34 @@ class FormatterVisitor(val builder: StringBuilder) : SparkSqlParserBaseVisitor<V
         return null
     }
 
+    //CREATE namespace (IF NOT EXISTS)? multipartIdentifier
+    //        (commentSpec |
+    //         locationSpec |
+    //         (WITH (DBPROPERTIES | PROPERTIES) propertyList))*
+    override fun visitCreateNamespace(ctx: CreateNamespaceContext): Void? {
+        builder.append("CREATE ").append(ctx.namespace().text.uppercase()).append(" ")
+        if (ctx.IF() != null) {
+            builder.append("IF NOT EXISTS ")
+        }
+        visit(ctx.multipartIdentifier())
+        if (ctx.commentSpec().size > 0) {
+            builder.append("\nCOMMENT ").append(ctx.commentSpec().get(0).STRING().text)
+        }
+        if (ctx.locationSpec().size > 0) {
+            builder.append("\nLOCATION ").append(ctx.locationSpec().get(0).STRING().text)
+        }
+        if (ctx.WITH().size > 0) {
+            builder.append("\nWITH ")
+            if (ctx.DBPROPERTIES().size > 0) {
+                builder.append("DBPROPERTIES ")
+            } else if (ctx.PROPERTIES().size > 0) {
+                builder.append("PROPERTIES ")
+            }
+            joinChild(ctx.propertyList(0).property(), "(\n" + INDENT, "\n)", ",\n" + INDENT)
+        }
+        return null
+    }
+
     //-----------------------private method-------------------------------------
 
     private fun iteratorChild(children: List<ParseTree>, uppercase: Boolean = true,

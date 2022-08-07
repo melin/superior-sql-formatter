@@ -86,4 +86,23 @@ class SparkDdlSqlFormatterTest {
         """.trimMargin()
         Assert.assertEquals(expected, formatSql)
     }
+
+    @Test
+    fun createDatabaseTest() {
+        val sql = """
+            CREATE DATABASE IF NOT EXISTS customer_db COMMENT 'This is customer database' LOCATION '/user'
+            WITH DBPROPERTIES (ID=001, Name='John');
+        """.trimIndent()
+        val formatSql = SparkSqlFormatter.formatSql(sql)
+        val expected = """
+            |CREATE DATABASE IF NOT EXISTS customer_db
+            |COMMENT 'This is customer database'
+            |LOCATION '/user'
+            |WITH DBPROPERTIES (
+            |  ID = 001,
+            |  Name = 'John'
+            |)
+        """.trimMargin()
+        Assert.assertEquals(expected, formatSql)
+    }
 }
