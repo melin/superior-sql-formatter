@@ -144,4 +144,37 @@ class SparkDdlSqlFormatterTest {
         """.trimMargin()
         Assert.assertEquals(expected, formatSql)
     }
+
+    @Test
+    fun replaceTableSqlTest() {
+        val sql = """
+            replace table test_hudi_demo ( 
+                id int, 
+                name string, 
+                price double,
+                ds string)
+            using hudi
+            partitioned by (ds)
+            COMMENT 'this is a comment'
+            TBLPROPERTIES ('foo'='bar')
+            lifeCycle 300;
+        """.trimIndent()
+        val formatSql = SparkSqlFormatter.formatSql(sql)
+        val expected = """
+            |REPLACE TABLE test_hudi_demo (
+            |  id int,
+            |  name string,
+            |  price double,
+            |  ds string
+            |)
+            |USING hudi
+            |PARTITIONED BY (ds)
+            |LIFECYCLE 300
+            |TBLPROPERTIES (
+            |  'foo' = 'bar'
+            |)
+            |COMMENT 'this is a comment'
+        """.trimMargin()
+        Assert.assertEquals(expected, formatSql)
+    }
 }

@@ -1832,6 +1832,39 @@ class FormatterVisitor(val builder: StringBuilder) : SparkSqlParserBaseVisitor<V
         return null
     }
 
+    override fun visitReplaceTable(ctx: ReplaceTableContext): Void? {
+        visit(ctx.replaceTableHeader())
+        if (ctx.LEFT_PAREN() != null) {
+            builder.append(" (\n")
+            visit(ctx.colTypeList())
+            builder.append("\n)")
+        }
+        if (ctx.tableProvider() != null) {
+            builder.append("\n")
+            visit(ctx.tableProvider())
+        }
+        visit(ctx.createTableClauses())
+        if (ctx.AS() != null) {
+            builder.append(" AS\n")
+        }
+        if (ctx.query() != null) {
+            visit(ctx.query())
+        }
+        return null
+    }
+
+    //replaceTableHeader
+    //    : (CREATE OR)? REPLACE TABLE multipartIdentifier
+    //    ;
+    override fun visitReplaceTableHeader(ctx: ReplaceTableHeaderContext): Void? {
+        if (ctx.CREATE() != null) {
+            builder.append("CREATE OR ")
+        }
+        builder.append("REPLACE TABLE ")
+        visit(ctx.multipartIdentifier())
+        return null
+    }
+
     //-----------------------private method-------------------------------------
 
     private fun iteratorChild(children: List<ParseTree>, uppercase: Boolean = true,
