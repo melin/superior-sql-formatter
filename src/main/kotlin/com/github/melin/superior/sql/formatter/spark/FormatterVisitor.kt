@@ -1498,6 +1498,8 @@ class FormatterVisitor(val builder: StringBuilder) : SparkSqlParserBaseVisitor<V
             }
         }
 
+        visit(ctx.createTableClauses())
+
         if (ctx.AS() != null) {
             builder.append(" AS\n")
         }
@@ -1527,6 +1529,35 @@ class FormatterVisitor(val builder: StringBuilder) : SparkSqlParserBaseVisitor<V
     override fun visitColType(ctx: ColTypeContext): Void? {
         //colName=errorCapturingIdentifier dataType (NOT NULL)? commentSpec?
         joinChild(ctx.children, "", "", " ")
+        return null
+    }
+
+    override fun visitCreateTableClauses(ctx: CreateTableClausesContext): Void? {
+        if (ctx.OPTIONS().size > 0) {
+            builder.append("\nOPTIONS")
+            visit(ctx.options)
+        }
+
+        if (ctx.primaryKeyExpr().size > 0) {
+            visit(ctx.primaryKeyExpr().get(0))
+        }
+        if (ctx.PARTITIONED().size > 0) {
+            builder.append("\nPARTITIONED BY ")
+            joinChild(ctx.partitionFieldList())
+        }
+        if (ctx.LIFECYCLE().size > 0) {
+            builder.append("\nLIFECYCLE ").append(ctx.lifecycle.text)
+        }
+
+        return null
+    }
+
+    override fun visitPrimaryKeyExpr(ctx: PrimaryKeyExprContext): Void? {
+        builder.append("\nPRIMARY KEY ")
+        joinChild(ctx.primaryColumnNames().errorCapturingIdentifier())
+        if (ctx.WITH() != null) {
+            builder.append(" WITH ").append(ctx.hudiType.text)
+        }
         return null
     }
 

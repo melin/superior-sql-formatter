@@ -39,4 +39,33 @@ class SparkDdlSqlFormatterTest {
         """.trimMargin()
         Assert.assertEquals(expected, formatSql)
     }
+
+    @Test
+    fun createHudiTableSqlTest() {
+        val sql = """
+            create table test_hudi_demo ( 
+                id int, 
+                name string, 
+                price double,
+                ds string)
+            using hudi    
+            primary key (id)
+            partitioned by (ds)
+            lifeCycle 300;
+        """.trimIndent()
+        val formatSql = SparkSqlFormatter.formatSql(sql)
+        val expected = """
+            |CREATE TABLE test_hudi_demo (
+            |  id int,
+            |  name string,
+            |  price double,
+            |  ds string
+            |)
+            |USING hudi
+            |PRIMARY KEY (id)
+            |PARTITIONED BY (ds)
+            |LIFECYCLE 300
+        """.trimMargin()
+        Assert.assertEquals(expected, formatSql)
+    }
 }

@@ -849,6 +849,7 @@ class SparkQuerySqlFormatterTest {
                 password='dataworks2021',
                 host='10.5.20.20',
                 port=3306,
+                enable=false,
                 resultTableName='tdl_dc_job',
                 databaseName='dataworks', tableName='dc_job', columns=['*'])
             transform = 'select * from tdl_dc_job where type="spark_sql"'
@@ -861,6 +862,7 @@ class SparkQuerySqlFormatterTest {
             |  password = 'dataworks2021',
             |  host = '10.5.20.20',
             |  port = 3306,
+            |  enable = false,
             |  resultTableName = 'tdl_dc_job',
             |  databaseName = 'dataworks',
             |  tableName = 'dc_job',
