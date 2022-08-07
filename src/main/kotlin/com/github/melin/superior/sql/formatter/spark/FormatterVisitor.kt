@@ -1750,10 +1750,6 @@ class FormatterVisitor(val builder: StringBuilder) : SparkSqlParserBaseVisitor<V
         return null
     }
 
-    //CREATE namespace (IF NOT EXISTS)? multipartIdentifier
-    //        (commentSpec |
-    //         locationSpec |
-    //         (WITH (DBPROPERTIES | PROPERTIES) propertyList))*
     override fun visitCreateNamespace(ctx: CreateNamespaceContext): Void? {
         builder.append("CREATE ").append(ctx.namespace().text.uppercase()).append(" ")
         if (ctx.IF() != null) {
@@ -1775,6 +1771,64 @@ class FormatterVisitor(val builder: StringBuilder) : SparkSqlParserBaseVisitor<V
             }
             joinChild(ctx.propertyList(0).property(), "(\n" + INDENT, "\n)", ",\n" + INDENT)
         }
+        return null
+    }
+
+    override fun visitSetNamespaceProperties(ctx: SetNamespacePropertiesContext): Void? {
+        builder.append("ALTER ").append(ctx.namespace().text.uppercase()).append(" ")
+        visit(ctx.multipartIdentifier())
+        builder.append(" SET ")
+        if (ctx.DBPROPERTIES() != null) {
+            builder.append("DBPROPERTIES ")
+        } else {
+            builder.append("PROPERTIES ")
+        }
+        joinChild(ctx.propertyList().property(), "(\n" + INDENT, "\n)", ",\n" + INDENT)
+        return null
+    }
+
+    override fun visitSetNamespaceLocation(ctx: SetNamespaceLocationContext): Void? {
+        builder.append("ALTER ").append(ctx.namespace().text.uppercase()).append(" ")
+        visit(ctx.multipartIdentifier())
+        builder.append(" SET ")
+        builder.append("LOCATION ").append(ctx.locationSpec().STRING().text)
+        return null
+    }
+
+    override fun visitDropNamespace(ctx: DropNamespaceContext): Void? {
+        builder.append("DROP ").append(ctx.namespace().text.uppercase()).append(" ")
+        if (ctx.IF() != null) {
+            builder.append("IF EXISTS ")
+        }
+        visit(ctx.multipartIdentifier())
+
+        if (ctx.RESTRICT() != null) {
+            builder.append(" RESTRICT")
+        } else if (ctx.CASCADE() != null) {
+            builder.append(" CASCADE")
+        }
+        return null
+    }
+
+    override fun visitShowNamespaces(ctx: ShowNamespacesContext): Void? {
+        builder.append("SHOW ").append(ctx.namespaces().text.uppercase()).append(" ")
+        if (ctx.multipartIdentifier() != null) {
+            if (ctx.FROM() != null) {
+                builder.append("FROM ")
+            } else {
+                builder.append("IN ")
+            }
+            visit(ctx.multipartIdentifier())
+            builder.append(" ")
+        }
+
+        if (ctx.pattern != null) {
+            if (ctx.LIKE() != null) {
+                builder.append("LIKE ")
+            }
+            builder.append(ctx.pattern.text)
+        }
+
         return null
     }
 

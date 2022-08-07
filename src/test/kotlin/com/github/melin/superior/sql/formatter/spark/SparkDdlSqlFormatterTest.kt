@@ -105,4 +105,43 @@ class SparkDdlSqlFormatterTest {
         """.trimMargin()
         Assert.assertEquals(expected, formatSql)
     }
+
+    @Test
+    fun showDatabasesTest() {
+        val sql = """
+            SHOW databases LIKE 'pay*';
+        """.trimIndent()
+        val formatSql = SparkSqlFormatter.formatSql(sql)
+        val expected = """
+            |SHOW DATABASES LIKE 'pay*'
+        """.trimMargin()
+        Assert.assertEquals(expected, formatSql)
+    }
+
+    @Test
+    fun alterDatabasePropsTest() {
+        val sql = """
+            ALTER database inventory SET DBPROPERTIES ('Edited-by' = 'John', 'Edit-date' = '01/01/2001');
+        """.trimIndent()
+        val formatSql = SparkSqlFormatter.formatSql(sql)
+        val expected = """
+            |ALTER DATABASE inventory SET DBPROPERTIES (
+            |  'Edited-by' = 'John',
+            |  'Edit-date' = '01/01/2001'
+            |)
+        """.trimMargin()
+        Assert.assertEquals(expected, formatSql)
+    }
+
+    @Test
+    fun alterDatabaseLocationTest() {
+        val sql = """
+            ALTER database inventory SET LOCATION 'file:/temp/spark-warehouse/new_inventory.db';
+        """.trimIndent()
+        val formatSql = SparkSqlFormatter.formatSql(sql)
+        val expected = """
+            |ALTER DATABASE inventory SET LOCATION 'file:/temp/spark-warehouse/new_inventory.db'
+        """.trimMargin()
+        Assert.assertEquals(expected, formatSql)
+    }
 }
