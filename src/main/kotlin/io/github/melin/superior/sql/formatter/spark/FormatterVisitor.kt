@@ -216,7 +216,8 @@ class FormatterVisitor(val builder: StringBuilder) : SparkSqlParserBaseVisitor<V
     }
 
     override fun visitJoinRelation(ctx: JoinRelationContext): Void? {
-        append(indent, "\n", INDENT)
+        builder.append("\n")
+        append(indent, INDENT)
         iteratorChild(ctx.children, true, " ", "")
         return null
     }
@@ -734,7 +735,6 @@ class FormatterVisitor(val builder: StringBuilder) : SparkSqlParserBaseVisitor<V
         visit(ctx.getChild(1)) // sub query sql
         indent -= 1
 
-        append(indent)
         builder.append(")")
 
         visit(ctx.getChild(3)) // alias name
@@ -747,7 +747,8 @@ class FormatterVisitor(val builder: StringBuilder) : SparkSqlParserBaseVisitor<V
             if (child is TerminalNodeImpl) {
                 builder.append(" ").append(child.text.uppercase())
             } else {
-                builder.append(" ").append(child.text)
+                builder.append(" ")
+                visit(child)
             }
         }
         return null;
@@ -1313,11 +1314,6 @@ class FormatterVisitor(val builder: StringBuilder) : SparkSqlParserBaseVisitor<V
         return null
     }
 
-    override fun visitColumnReference(ctx: ColumnReferenceContext): Void? {
-        builder.append(ctx.identifier().text)
-        return null;
-    }
-
     override fun visitStar(ctx: StarContext): Void? {
         builder.append(ctx.text)
         return null;
@@ -1439,6 +1435,16 @@ class FormatterVisitor(val builder: StringBuilder) : SparkSqlParserBaseVisitor<V
         } else {
             joinChild(ctx.identifier(), "", "", ".")
         }
+        return null
+    }
+
+    override fun visitQuotedIdentifierAlternative(ctx: QuotedIdentifierAlternativeContext): Void? {
+        builder.append('`').append(ctx.text).append('`')
+        return null
+    }
+
+    override fun visitUnquotedIdentifier(ctx: UnquotedIdentifierContext): Void? {
+        builder.append(ctx.text)
         return null
     }
 

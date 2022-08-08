@@ -930,4 +930,64 @@ class SparkQuerySqlFormatterTest {
         """.trimMargin()
         Assert.assertEquals(expected, formatSql)
     }
+
+    @Test
+    fun complexSqlTest() {
+        val sql = """
+             SELECT `t`.`compose_uk`, `t`.`cc_name` AS `name`, `t`.`cc_class` AS `class`, `t`.`cc_employees` AS `employees`, SUM(`t`.`cc_mkt_id`) AS `mkt_id`
+FROM (SELECT `call_center.xlsx`.`cc_name`, `call_center.xlsx`.`cc_class`, `call_center.xlsx`.`cc_employees`, `call_center.xlsx`.`cc_mkt_id`, `call_center.xlsx`.`cc_country`, `rp_dimension_c685e3_1d899f2b0bed5847898c74b62815283f`.`compose_uk`
+FROM (SELECT `call_center.xlsx`.`cc_name`, `call_center.xlsx`.`cc_class`, `call_center.xlsx`.`cc_employees`, `call_center.xlsx`.`cc_mkt_id`, `call_center.xlsx`.`cc_country`
+FROM `default.ecs_fature_xls`.`iceberg_db`.`call_center.xlsx`
+WHERE `call_center.xlsx`.`cc_rec_start_date` = '2002-01-01' AND `call_center.xlsx`.`cc_name` IS NOT NULL) AS `call_center.xlsx`
+INNER JOIN `default.feature_rp_xls_default_sys_result_rp`.`result_rp_dimension`.`rp_dimension_c685e3_1d899f2b0bed5847898c74b62815283f` ON `call_center.xlsx`.`cc_country` = `rp_dimension_c685e3_1d899f2b0bed5847898c74b62815283f`.`dimension_1`) AS `t`
+INNER JOIN (SELECT `rp_dimension_c685e3_1d899f2b0bed5847898c74b62815283f`.`dimension_1`
+FROM `default.feature_rp_xls_default_sys_result_rp`.`result_rp_dimension`.`rp_dimension_c685e3_1d899f2b0bed5847898c74b62815283f`
+GROUP BY `rp_dimension_c685e3_1d899f2b0bed5847898c74b62815283f`.`dimension_1`) AS `rp_dimension_c685e3_1d899f2b0bed5847898c74b62815283f0` ON `t`.`cc_country` = `rp_dimension_c685e3_1d899f2b0bed5847898c74b62815283f0`.`dimension_1`
+GROUP BY `t`.`compose_uk`, `t`.`cc_name`, `t`.`cc_class`, `t`.`cc_employees`
+ORDER BY `t`.`cc_name` IS NULL, `t`.`cc_name`, `t`.`cc_class` IS NULL, `t`.`cc_class`
+        """.trimIndent()
+        val formatSql = SparkSqlFormatter.formatSql(sql)
+        val expected = """
+            |SELECT
+  `t`.`compose_uk`,
+  `t`.`cc_name` AS `name`,
+  `t`.`cc_class` AS `class`,
+  `t`.`cc_employees` AS `employees`,
+  SUM(`t`.`cc_mkt_id`) AS `mkt_id`
+FROM (
+    SELECT
+      `call_center.xlsx`.`cc_name`,
+      `call_center.xlsx`.`cc_class`,
+      `call_center.xlsx`.`cc_employees`,
+      `call_center.xlsx`.`cc_mkt_id`,
+      `call_center.xlsx`.`cc_country`,
+      `rp_dimension_c685e3_1d899f2b0bed5847898c74b62815283f`.`compose_uk`
+    FROM (
+        SELECT
+          `call_center.xlsx`.`cc_name`,
+          `call_center.xlsx`.`cc_class`,
+          `call_center.xlsx`.`cc_employees`,
+          `call_center.xlsx`.`cc_mkt_id`,
+          `call_center.xlsx`.`cc_country`
+        FROM `default.ecs_fature_xls`.`iceberg_db`.`call_center.xlsx`
+        WHERE
+          `call_center.xlsx`.`cc_rec_start_date` = '2002-01-01'
+          AND `call_center.xlsx`.`cc_name` IS NOT NULL
+      ) AS `call_center.xlsx`
+      INNER JOIN `default.feature_rp_xls_default_sys_result_rp`.`result_rp_dimension`.`rp_dimension_c685e3_1d899f2b0bed5847898c74b62815283f` ON `call_center.xlsx`.`cc_country` = `rp_dimension_c685e3_1d899f2b0bed5847898c74b62815283f`.`dimension_1`
+  ) AS `t`
+  INNER JOIN (
+    SELECT `rp_dimension_c685e3_1d899f2b0bed5847898c74b62815283f`.`dimension_1`
+    FROM `default.feature_rp_xls_default_sys_result_rp`.`result_rp_dimension`.`rp_dimension_c685e3_1d899f2b0bed5847898c74b62815283f`
+    GROUP BY `rp_dimension_c685e3_1d899f2b0bed5847898c74b62815283f`.`dimension_1`
+  ) AS `rp_dimension_c685e3_1d899f2b0bed5847898c74b62815283f0` ON `t`.`cc_country` = `rp_dimension_c685e3_1d899f2b0bed5847898c74b62815283f0`.`dimension_1`
+GROUP BY `t`.`compose_uk`, `t`.`cc_name`, `t`.`cc_class`, `t`.`cc_employees`
+ORDER BY
+  `t`.`cc_name` IS NULL,
+  `t`.`cc_name`,
+  `t`.`cc_class` IS NULL,
+  `t`.`cc_class`
+        """.trimMargin()
+        Assert.assertEquals(expected, formatSql)
+    }
 }
