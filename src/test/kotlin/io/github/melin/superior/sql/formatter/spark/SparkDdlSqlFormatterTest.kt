@@ -372,6 +372,24 @@ class SparkDdlSqlFormatterTest {
     }
 
     @Test
+    fun explainTest1() {
+        val sql = """
+            EXPLAIN select k, sum(v) from values (1, 2), (1, 3) t(k, v) group by k;
+        """.trimIndent()
+        val formatSql = SparkSqlFormatter.formatSql(sql)
+        val expected = """
+            |EXPLAIN SELECT
+            |  k,
+            |  sum(v)
+            |FROM VALUES
+            |  (1, 2),
+            |  (1, 3) AS t(k, v)
+            |GROUP BY k
+        """.trimMargin()
+        Assert.assertEquals(expected, formatSql)
+    }
+
+    @Test
     fun describeQuertTest1() {
         val sql = """
             DESCRIBE QUERY WITH all_names_cte
