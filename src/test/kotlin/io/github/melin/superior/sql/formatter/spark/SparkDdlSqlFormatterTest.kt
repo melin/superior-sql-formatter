@@ -360,6 +360,18 @@ class SparkDdlSqlFormatterTest {
     }
 
     @Test
+    fun showColumnsTest1() {
+        val sql = """
+            SHOW COLUMNS IN customer IN salesdb;
+        """.trimIndent()
+        val formatSql = SparkSqlFormatter.formatSql(sql)
+        val expected = """
+            |SHOW COLUMNS IN customer IN salesdb
+        """.trimMargin()
+        Assert.assertEquals(expected, formatSql)
+    }
+
+    @Test
     fun createViewTest1() {
         val sql = """
             CREATE OR REPLACE VIEW experienced_employee

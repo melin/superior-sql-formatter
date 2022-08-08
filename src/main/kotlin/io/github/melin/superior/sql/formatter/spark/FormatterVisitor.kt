@@ -2410,23 +2410,7 @@ class FormatterVisitor(val builder: StringBuilder) : SparkSqlParserBaseVisitor<V
     }
 
     override fun visitShowColumns(ctx: ShowColumnsContext): Void? {
-        builder.append("SHOW COLUMNS ")
-        if (ctx.FROM() != null) {
-            builder.append("FROM ")
-        } else {
-            builder.append("IN ")
-        }
-        visit(ctx.table)
-
-        if (ctx.ns != null) {
-            builder.append(" ")
-            if (ctx.FROM() != null) {
-                builder.append("FROM ")
-            } else {
-                builder.append("IN ")
-            }
-            visit(ctx.ns)
-        }
+        joinChildren(ctx.children)
         return null
     }
 
@@ -2619,6 +2603,31 @@ class FormatterVisitor(val builder: StringBuilder) : SparkSqlParserBaseVisitor<V
             } else {
                 visit(child)
                 builder.append(childAppend)
+            }
+        }
+    }
+
+    private fun joinChildren(children: List<ParseTree>, uppercase: Boolean = true, delimiter: String = " ") {
+        if (children.size == 0) {
+            return
+        }
+
+        var first = true
+        children.forEach { child ->
+            if (first) {
+                first = false
+            } else {
+                builder.append(delimiter)
+            }
+
+            if (child is TerminalNodeImpl) {
+                if (uppercase) {
+                    builder.append(child.text.uppercase())
+                } else {
+                    builder.append(child.text)
+                }
+            } else {
+                visit(child)
             }
         }
     }
