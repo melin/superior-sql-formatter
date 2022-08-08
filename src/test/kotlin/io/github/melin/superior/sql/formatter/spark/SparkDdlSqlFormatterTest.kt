@@ -468,4 +468,64 @@ class SparkDdlSqlFormatterTest {
         """.trimMargin()
         Assert.assertEquals(expected, formatSql)
     }
+
+    @Test
+    fun commentTableTest1() {
+        val sql = """
+            COMMENT ON table my_table IS 'This is my table';
+        """.trimIndent()
+        val formatSql = SparkSqlFormatter.formatSql(sql)
+        val expected = """
+            |COMMENT ON TABLE my_table IS 'This is my table'
+        """.trimMargin()
+        Assert.assertEquals(expected, formatSql)
+    }
+
+    @Test
+    fun commentTableTest2() {
+        val sql = """
+            COMMENT ON TABLE my_table IS NULL
+        """.trimIndent()
+        val formatSql = SparkSqlFormatter.formatSql(sql)
+        val expected = """
+            |COMMENT ON TABLE my_table IS NULL
+        """.trimMargin()
+        Assert.assertEquals(expected, formatSql)
+    }
+
+    @Test
+    fun truncateTableTest2() {
+        val sql = """
+            TRUNCATE TABLE Student partition(age=10);
+        """.trimIndent()
+        val formatSql = SparkSqlFormatter.formatSql(sql)
+        val expected = """
+            |TRUNCATE TABLE Student PARTITION(age = 10)
+        """.trimMargin()
+        Assert.assertEquals(expected, formatSql)
+    }
+
+    @Test
+    fun msckTableTest2() {
+        val sql = """
+            MSCK REPAIR TABLE t1;
+        """.trimIndent()
+        val formatSql = SparkSqlFormatter.formatSql(sql)
+        val expected = """
+            |MSCK REPAIR TABLE t1
+        """.trimMargin()
+        Assert.assertEquals(expected, formatSql)
+    }
+
+    @Test
+    fun dropTableTest() {
+        val sql = """
+            DROP TABLE IF EXISTS employeetable;
+        """.trimIndent()
+        val formatSql = SparkSqlFormatter.formatSql(sql)
+        val expected = """
+            |DROP TABLE IF EXISTS employeetable
+        """.trimMargin()
+        Assert.assertEquals(expected, formatSql)
+    }
 }

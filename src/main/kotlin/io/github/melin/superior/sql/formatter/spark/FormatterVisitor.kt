@@ -2197,23 +2197,12 @@ class FormatterVisitor(val builder: StringBuilder) : SparkSqlParserBaseVisitor<V
     }
 
     override fun visitDropTable(ctx: DropTableContext): Void? {
-        builder.append("DROP TABLE ")
-        if (ctx.EXISTS() != null) {
-            builder.append(" IF EXISTS ")
-        }
-        visit(ctx.multipartIdentifier())
-        if (ctx.PURGE() != null) {
-            builder.append(" PURGE")
-        }
+        joinChildren(ctx.children)
         return null
     }
 
     override fun visitDropView(ctx: DropViewContext): Void? {
-        builder.append("DROP VIEW ")
-        if (ctx.EXISTS() != null) {
-            builder.append(" IF EXISTS ")
-        }
-        visit(ctx.multipartIdentifier())
+        joinChildren(ctx.children)
         return null
     }
 
@@ -2589,6 +2578,16 @@ class FormatterVisitor(val builder: StringBuilder) : SparkSqlParserBaseVisitor<V
         } else {
             builder.append(ctx.comment.text)
         }
+        return null
+    }
+
+    override fun visitTruncateTable(ctx: TruncateTableContext): Void? {
+        joinChildren(ctx.children)
+        return null
+    }
+
+    override fun visitRepairTable(ctx: RepairTableContext): Void? {
+        joinChildren(ctx.children)
         return null
     }
 
