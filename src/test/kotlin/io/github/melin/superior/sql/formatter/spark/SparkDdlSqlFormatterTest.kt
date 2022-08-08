@@ -336,6 +336,30 @@ class SparkDdlSqlFormatterTest {
     }
 
     @Test
+    fun showTableExtendedTest1() {
+        val sql = """
+            SHOW table EXTENDED LIKE 'employee';
+        """.trimIndent()
+        val formatSql = SparkSqlFormatter.formatSql(sql)
+        val expected = """
+            |SHOW TABLE EXTENDED LIKE 'employee'
+        """.trimMargin()
+        Assert.assertEquals(expected, formatSql)
+    }
+
+    @Test
+    fun showTableExtendedTest2() {
+        val sql = """
+            SHOW table EXTENDED  IN default LIKE 'employee' PARTITION (grade=1);
+        """.trimIndent()
+        val formatSql = SparkSqlFormatter.formatSql(sql)
+        val expected = """
+            |SHOW TABLE EXTENDED IN default LIKE 'employee' PARTITION(grade = 1)
+        """.trimMargin()
+        Assert.assertEquals(expected, formatSql)
+    }
+
+    @Test
     fun createViewTest1() {
         val sql = """
             CREATE OR REPLACE VIEW experienced_employee

@@ -2387,9 +2387,10 @@ class FormatterVisitor(val builder: StringBuilder) : SparkSqlParserBaseVisitor<V
                 builder.append("IN ")
             }
             visit(ctx.ns)
+            builder.append(" ")
         }
 
-        builder.append(" LIKE ").append(ctx.pattern.text)
+        builder.append("LIKE ").append(ctx.pattern.text)
         if (ctx.partitionSpec() != null) {
             builder.append(" ")
             visit(ctx.partitionSpec())
