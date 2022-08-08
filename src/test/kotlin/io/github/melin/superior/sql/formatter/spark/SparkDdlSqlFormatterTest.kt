@@ -314,8 +314,8 @@ class SparkDdlSqlFormatterTest {
         val formatSql = SparkSqlFormatter.formatSql(sql)
         val expected = """
             |ALTER VIEW tempdb1.v2 AS
-            |  SELECT *
-            |  FROM tempdb1.v1
+            |SELECT *
+            |FROM tempdb1.v1
         """.trimMargin()
         Assert.assertEquals(expected, formatSql)
     }
@@ -367,6 +367,37 @@ class SparkDdlSqlFormatterTest {
         val formatSql = SparkSqlFormatter.formatSql(sql)
         val expected = """
             |SHOW COLUMNS IN customer IN salesdb
+        """.trimMargin()
+        Assert.assertEquals(expected, formatSql)
+    }
+
+    @Test
+    fun describeQuertTest1() {
+        val sql = """
+            DESCRIBE QUERY WITH all_names_cte
+            AS (SELECT name from person) SELECT * FROM all_names_cte;
+        """.trimIndent()
+        val formatSql = SparkSqlFormatter.formatSql(sql)
+        val expected = """
+            |DESCRIBE QUERY WITH all_names_cte AS (
+            |  SELECT name
+            |  FROM person
+            |)
+            |SELECT *
+            |FROM all_names_cte
+        """.trimMargin()
+        Assert.assertEquals(expected, formatSql)
+    }
+
+    @Test
+    fun describeQuertTest2() {
+        val sql = """
+            DESC QUERY VALUES(100, 'John', 10000.20D) AS employee(id, name, salary);
+        """.trimIndent()
+        val formatSql = SparkSqlFormatter.formatSql(sql)
+        val expected = """
+            |DESC QUERY VALUES
+            |  (100, 'John', 10000.20D) AS employee(id, name, salary)
         """.trimMargin()
         Assert.assertEquals(expected, formatSql)
     }

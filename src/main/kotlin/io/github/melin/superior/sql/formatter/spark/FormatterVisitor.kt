@@ -81,7 +81,9 @@ class FormatterVisitor(val builder: StringBuilder) : SparkSqlParserBaseVisitor<V
     override fun visitQuery(ctx: QueryContext): Void? {
         if (!(ctx.parent is StatementDefaultContext
                     || ctx.parent is CreateTableContext
-                    || ctx.parent is SingleInsertQueryContext)) {
+                    || ctx.parent is SingleInsertQueryContext
+                    || ctx.parent is DescribeQueryContext
+                    || ctx.parent is AlterViewQueryContext)) {
             builder.append("\n")
             indent++
         }
@@ -90,7 +92,9 @@ class FormatterVisitor(val builder: StringBuilder) : SparkSqlParserBaseVisitor<V
 
         if (!(ctx.parent is StatementDefaultContext
                     || ctx.parent is CreateTableContext
-                    || ctx.parent is SingleInsertQueryContext)) {
+                    || ctx.parent is SingleInsertQueryContext
+                    || ctx.parent is DescribeQueryContext
+                    || ctx.parent is AlterViewQueryContext)) {
             builder.append("\n")
             indent--
             append(indent)
@@ -2289,10 +2293,11 @@ class FormatterVisitor(val builder: StringBuilder) : SparkSqlParserBaseVisitor<V
         builder.append("ALTER VIEW ")
         visit(ctx.multipartIdentifier())
         if (ctx.AS() != null) {
-            builder.append(" AS")
+            builder.append(" AS\n")
+        } else {
+            builder.append("\n")
         }
         visit(ctx.query())
-        builder.setLength(builder.length - 1); // 去掉最后空行
         return null
     }
 

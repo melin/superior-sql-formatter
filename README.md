@@ -3,9 +3,9 @@ Spark SQL 代码格式化，用于Superior数据中台 Studio SQL 格式化
 
 ```xml
 <dependency>
-    <artifactId>superior-sql-formatter</artifactId>
     <groupId>io.github.melin.superior.sql.formatter</groupId>
-    <version>0.8.0</version>
+    <artifactId>superior-sql-formatter</artifactId>
+    <version>0.9.0</version>
 </dependency>
 ```
 
