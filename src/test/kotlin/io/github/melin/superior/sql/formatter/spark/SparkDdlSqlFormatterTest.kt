@@ -436,13 +436,12 @@ class SparkDdlSqlFormatterTest {
             |  Name
             |)
             |COMMENT 'View for experienced employees'
-            |AS
-            |  SELECT
-            |    id,
-            |    name
-            |  FROM all_employee
-            |  WHERE
-            |    working_years > 5
+            |AS SELECT
+            |  id,
+            |  name
+            |FROM all_employee
+            |WHERE
+            |  working_years > 5
         """.trimMargin()
         Assert.assertEquals(expected, formatSql)
     }
@@ -458,12 +457,11 @@ class SparkDdlSqlFormatterTest {
         val formatSql = SparkSqlFormatter.formatSql(sql)
         val expected = """
             |CREATE GLOBAL TEMPORARY VIEW IF NOT EXISTS subscribed_movies
-            |AS
-            |  SELECT
-            |    mo.member_id,
-            |    mb.full_name,
-            |    mo.movie_title
-            |  FROM movies AS mo  
+            |AS SELECT
+            |  mo.member_id,
+            |  mb.full_name,
+            |  mo.movie_title
+            |FROM movies AS mo
             |  INNER JOIN members AS mb ON mo.member_id = mb.id
         """.trimMargin()
         Assert.assertEquals(expected, formatSql)

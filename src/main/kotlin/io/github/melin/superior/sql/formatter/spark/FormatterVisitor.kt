@@ -83,7 +83,8 @@ class FormatterVisitor(val builder: StringBuilder) : SparkSqlParserBaseVisitor<V
                     || ctx.parent is CreateTableContext
                     || ctx.parent is SingleInsertQueryContext
                     || ctx.parent is DescribeQueryContext
-                    || ctx.parent is AlterViewQueryContext)) {
+                    || ctx.parent is AlterViewQueryContext
+                    || ctx.parent is CreateViewContext)) {
             builder.append("\n")
             indent++
         }
@@ -94,7 +95,8 @@ class FormatterVisitor(val builder: StringBuilder) : SparkSqlParserBaseVisitor<V
                     || ctx.parent is CreateTableContext
                     || ctx.parent is SingleInsertQueryContext
                     || ctx.parent is DescribeQueryContext
-                    || ctx.parent is AlterViewQueryContext)) {
+                    || ctx.parent is AlterViewQueryContext
+                    || ctx.parent is CreateViewContext)) {
             builder.append("\n")
             indent--
             append(indent)
@@ -2241,9 +2243,8 @@ class FormatterVisitor(val builder: StringBuilder) : SparkSqlParserBaseVisitor<V
             builder.append("\nTBLPROPERTIES ")
             visit(ctx.propertyList().get(0))
         }
-        builder.append("\nAS")
+        builder.append("\nAS ")
         visit(ctx.query())
-        builder.setLength(builder.length - 1); // 去掉最后空行
         return null
     }
 
