@@ -295,13 +295,25 @@ class SparkDdlSqlFormatterTest {
     }
 
     @Test
-    fun addColumnTest3() {
+    fun alterColumnTest3() {
         val sql = """
             ALTER TABLE employee CHANGE name ename String;
         """.trimIndent()
         val formatSql = SparkSqlFormatter.formatSql(sql)
         val expected = """
             |ALTER TABLE employee CHANGE name ename String
+        """.trimMargin()
+        Assert.assertEquals(expected, formatSql)
+    }
+
+    @Test
+    fun alterColumnTest4() {
+        val sql = """
+            ALTER TABLE demo rename column privce TO price
+        """.trimIndent()
+        val formatSql = SparkSqlFormatter.formatSql(sql)
+        val expected = """
+            |ALTER TABLE demo RENAME COLUMN privce TO price
         """.trimMargin()
         Assert.assertEquals(expected, formatSql)
     }
