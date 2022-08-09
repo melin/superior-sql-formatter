@@ -885,26 +885,26 @@ class FormatterVisitor(val builder: StringBuilder) : SparkSqlParserBaseVisitor<V
 
     override fun visitAggregationClause(ctx: AggregationClauseContext): Void? {
         builder.append("\n")
-        append(indent)
 
-        var first = true
-        ctx.children?.forEach { child ->
+        var multi = ctx.groupingExpressions.size > 1 || ctx.groupingExpressionsWithGroupingAnalytics.size > 1
+        ctx.children.forEach { child ->
             if (child is TerminalNodeImpl) {
                 val text = child.text.uppercase()
-                if (!",".equals(text)) {
-                    if (first) {
-                        first = false
+                if ("BY".equals(text)) {
+                    if (multi) {
+                        builder.append(" ").append(text).append('\n')
+                        append(indent, INDENT)
                     } else {
-                        builder.append(" ")
+                        builder.append(" ").append(text).append(" ")
                     }
-                    builder.append(text)
+                } else if (",".equals(text)) {
+                    builder.append(text).append('\n')
+                    append(indent, INDENT)
+                } else if ("GROUP".equals(text)) {
+                    append(indent, text)
                 } else {
-                    builder.append(text)
+                    builder.append(" ").append(text)
                 }
-            } else if (child is ExpressionContext) {
-                builder.append("\n")
-                append(indent, INDENT)
-                visit(child)
             } else {
                 visit(child)
             }
@@ -914,8 +914,6 @@ class FormatterVisitor(val builder: StringBuilder) : SparkSqlParserBaseVisitor<V
     }
 
     override fun visitGroupByClause(ctx: GroupByClauseContext): Void? {
-        builder.append(" ")
-
         ctx.children.forEach { child ->
             if (child is TerminalNodeImpl) {
                 builder.append(" ").append(child.text.uppercase())

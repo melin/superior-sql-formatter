@@ -981,7 +981,11 @@ FROM (
     FROM `default.feature_rp_xls_default_sys_result_rp`.`result_rp_dimension`.`rp_dimension_c685e3_1d899f2b0bed5847898c74b62815283f`
     GROUP BY `rp_dimension_c685e3_1d899f2b0bed5847898c74b62815283f`.`dimension_1`
   ) AS `rp_dimension_c685e3_1d899f2b0bed5847898c74b62815283f0` ON `t`.`cc_country` = `rp_dimension_c685e3_1d899f2b0bed5847898c74b62815283f0`.`dimension_1`
-GROUP BY `t`.`compose_uk`, `t`.`cc_name`, `t`.`cc_class`, `t`.`cc_employees`
+GROUP BY
+  `t`.`compose_uk`,
+  `t`.`cc_name`,
+  `t`.`cc_class`,
+  `t`.`cc_employees`
 ORDER BY
   `t`.`cc_name` IS NULL,
   `t`.`cc_name`,
