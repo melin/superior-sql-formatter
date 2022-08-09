@@ -821,7 +821,7 @@ class SparkQuerySqlFormatterTest {
         """.trimIndent()
         val formatSql = SparkSqlFormatter.formatSql(sql)
         val expected = """
-            |DATATUNNEL SOURCE("mysql") OPTIONS(
+            |DATATUNNEL SOURCE("mysql") OPTIONS (
             |  username = "dataworks",
             |  password = "dataworks2021",
             |  host = '10.5.20.20',
@@ -830,7 +830,7 @@ class SparkQuerySqlFormatterTest {
             |  tableName = 'dc_dtunnel_datasource',
             |  columns = ["*"]
             |)
-            |SINK("mysql") OPTIONS(
+            |SINK("hive") OPTIONS (
             |  databaseName = "bigdata",
             |  tableName = 'hive_dtunnel_datasource',
             |  writeMode = 'overwrite',
@@ -857,7 +857,7 @@ class SparkQuerySqlFormatterTest {
         """.trimIndent()
         val formatSql = SparkSqlFormatter.formatSql(sql)
         val expected = """
-            |DATATUNNEL SOURCE('mysql') OPTIONS(
+            |DATATUNNEL SOURCE('mysql') OPTIONS (
             |  username = 'dataworks',
             |  password = 'dataworks2021',
             |  host = '10.5.20.20',
@@ -869,7 +869,7 @@ class SparkQuerySqlFormatterTest {
             |  columns = ['*']
             |)
             |TRANSFORM = 'select * from tdl_dc_job where type="spark_sql"'
-            |SINK('mysql') OPTIONS(
+            |SINK('log') OPTIONS (
             |  numRows = 10
             |)
         """.trimMargin()

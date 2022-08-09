@@ -1348,13 +1348,13 @@ class FormatterVisitor(val builder: StringBuilder) : SparkSqlParserBaseVisitor<V
     }
 
     override fun visitDtunnelExpr(ctx: DtunnelExprContext): Void? {
-        builder.append("DATATUNNEL SOURCE(").append(ctx.srcName.text).append(") OPTIONS")
+        builder.append("DATATUNNEL SOURCE(").append(ctx.srcName.text).append(") OPTIONS ")
         joinChild(ctx.readOpts.dtProperty(), "(\n" + INDENT, "\n)", ",\n" + INDENT)
         builder.append("\n")
         if (ctx.TRANSFORM() != null) {
             builder.append("TRANSFORM = ").append(ctx.transfromSql.text).append("\n");
         }
-        builder.append("SINK(").append(ctx.srcName.text).append(") OPTIONS")
+        builder.append("SINK(").append(ctx.distName.text).append(") OPTIONS ")
         joinChild(ctx.writeOpts.dtProperty(), "(\n" + INDENT, "\n)", ",\n" + INDENT)
         return null
     }
