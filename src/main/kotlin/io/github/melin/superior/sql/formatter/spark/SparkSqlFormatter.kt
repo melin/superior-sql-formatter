@@ -11,7 +11,7 @@ import org.apache.commons.lang3.StringUtils
 
 object SparkSqlFormatter {
 
-    fun formatSql(sql: String): String? {
+    @JvmStatic fun formatSql(sql: String): String? {
         val trimSql = StringUtils.trim(sql)
 
         val charStream = UpperCaseCharStream(
