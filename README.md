@@ -24,3 +24,6 @@ val expected = """
     |LIMIT 10
 """.trimMargin()
 ```
+
+### 参考
+1. https://www.sqlstyle.guide/zh/
