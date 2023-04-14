@@ -41,11 +41,11 @@ class SparkQuerySqlFormatterTest {
 
     @Test
     fun simpleSelectSqlTest2() {
-        val sql = "select date '2022-12-12' as test, CURRENT_DATE, name from demo where not name = 'ss' and id>100 sort by name, age"
+        val sql = "select (date '2022-12-12') as test, CURRENT_DATE, name from demo where not name = 'ss' and id>100 sort by name, age"
         val formatSql = SparkSqlFormatter.formatSql(sql)
         val expected = """
             |SELECT
-            |  date '2022-12-12' AS test,
+            |  (date '2022-12-12') AS test,
             |  current_date,
             |  name
             |FROM demo
@@ -811,17 +811,18 @@ class SparkQuerySqlFormatterTest {
     @Test
     fun datatunnelProduceSqlTest() {
         val sql = """
-            datatunnel source("mysql") options(
+            datatunnel source('mysql') options(
             username="dataworks",
             password="dataworks2021",
             host='10.5.20.20',
             port=3306,
-            databaseName='dataworks', tableName='dc_dtunnel_datasource', columns=["*"])
+            databaseName='dataworks', 
+            tableName='dc_dtunnel_datasource', columns=["*"])
             sink("hive") options(databaseName="bigdata", tableName='hive_dtunnel_datasource', writeMode='overwrite', columns=["*"]);
         """.trimIndent()
         val formatSql = SparkSqlFormatter.formatSql(sql)
         val expected = """
-            |DATATUNNEL SOURCE("mysql") OPTIONS (
+            |DATATUNNEL SOURCE('mysql') OPTIONS (
             |  username = "dataworks",
             |  password = "dataworks2021",
             |  host = '10.5.20.20',
@@ -844,20 +845,21 @@ class SparkQuerySqlFormatterTest {
     fun datatunnelProduceSqlTest1() {
         val sql = """
             datatunnel 
-            source('mysql') options(
+            source("mysql") options(
                 username='dataworks',
                 password='dataworks2021',
                 host='10.5.20.20',
                 port=3306,
                 enable=false,
                 resultTableName='tdl_dc_job',
-                databaseName='dataworks', tableName='dc_job', columns=['*'])
+                databaseName='dataworks', tableName='dc_job', columns=['id',
+                    "name"])
             transform = 'select * from tdl_dc_job where type="spark_sql"'
             sink('log') options(numRows = 10)
         """.trimIndent()
         val formatSql = SparkSqlFormatter.formatSql(sql)
         val expected = """
-            |DATATUNNEL SOURCE('mysql') OPTIONS (
+            |DATATUNNEL SOURCE("mysql") OPTIONS (
             |  username = 'dataworks',
             |  password = 'dataworks2021',
             |  host = '10.5.20.20',
@@ -866,9 +868,64 @@ class SparkQuerySqlFormatterTest {
             |  resultTableName = 'tdl_dc_job',
             |  databaseName = 'dataworks',
             |  tableName = 'dc_job',
-            |  columns = ['*']
+            |  columns = ['id', "name"]
             |)
             |TRANSFORM = 'select * from tdl_dc_job where type="spark_sql"'
+            |SINK('log') OPTIONS (
+            |  numRows = 10
+            |)
+        """.trimMargin()
+        Assert.assertEquals(expected, formatSql)
+    }
+
+    @Test
+    fun datatunnelProduceSqlTest2() {
+        val sql = """
+            DATATUNNEL SOURCE('oracle') OPTIONS(
+            username='flinkuser',
+            password='flinkpw',
+            host='172.18.1.56',
+            port=1521,
+            serviceName='XE',
+            databaseName='FLINKUSER',    tableName='ORDERS', 
+            columns=[{'name' : "pk", "type" : "id"},
+            { "name" : "col_ip","type" : "ip" },
+            { "name" : "col_double","type" : "double" },
+            { "name" : "col_long","type" : "long" },
+            { "name" : "col_keyword", "type" : "keyword" },
+            { "name" : "col_text", "type" : "text", "analyzer" : "ik_max_word"},
+            { "name" : "col_geo_point", "type" : "geo_point" },
+            { "name" : "col_date", "type" : "date", "format" : "yyyy-MM-dd HH:mm:ss"},
+            { "name" : "col_nested1", "type" : "nested" },
+            { "name" : "col_object1", "type" : "object" },
+            { "name" : "col_integer_array", "type" : "integer", "array" : TRUE},
+            { "name" : "col_geo_shape", "type" : "geo_shape", "tree" : "quadtree", "precision" : "10m"}
+            ])
+            SINK('log') OPTIONS(numRows = 10)
+        """.trimIndent()
+        val formatSql = SparkSqlFormatter.formatSql(sql)
+        val expected = """
+            |DATATUNNEL SOURCE('oracle') OPTIONS (
+            |  username = 'flinkuser',
+            |  password = 'flinkpw',
+            |  host = '172.18.1.56',
+            |  port = 1521,
+            |  serviceName = 'XE',
+            |  databaseName = 'FLINKUSER',
+            |  tableName = 'ORDERS',
+            |  columns = [{'name' : "pk", "type" : "id"},
+            |    {"name" : "col_ip", "type" : "ip"},
+            |    {"name" : "col_double", "type" : "double"},
+            |    {"name" : "col_long", "type" : "long"},
+            |    {"name" : "col_keyword", "type" : "keyword"},
+            |    {"name" : "col_text", "type" : "text", "analyzer" : "ik_max_word"},
+            |    {"name" : "col_geo_point", "type" : "geo_point"},
+            |    {"name" : "col_date", "type" : "date", "format" : "yyyy-MM-dd HH:mm:ss"},
+            |    {"name" : "col_nested1", "type" : "nested"},
+            |    {"name" : "col_object1", "type" : "object"},
+            |    {"name" : "col_integer_array", "type" : "integer", "array" : TRUE},
+            |    {"name" : "col_geo_shape", "type" : "geo_shape", "tree" : "quadtree", "precision" : "10m"}]
+            |)
             |SINK('log') OPTIONS (
             |  numRows = 10
             |)

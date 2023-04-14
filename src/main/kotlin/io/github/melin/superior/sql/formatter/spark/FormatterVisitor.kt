@@ -589,7 +589,7 @@ class FormatterVisitor(val builder: StringBuilder) : SparkSqlParserBaseVisitor<V
     }
 
     override fun visitCommentSpec(ctx: CommentSpecContext): Void? {
-        builder.append("COMMENT ").append(ctx.STRING().text)
+        builder.append("COMMENT ").append(ctx.stringLit().text)
         return null
     }
 
@@ -1240,6 +1240,11 @@ class FormatterVisitor(val builder: StringBuilder) : SparkSqlParserBaseVisitor<V
         return null;
     }
 
+    override fun visitStringLit(ctx: StringLitContext): Void? {
+        builder.append(ctx.text)
+        return null
+    }
+
     override fun visitConstantDefault(ctx: ConstantDefaultContext): Void? {
         ctx.children.forEach { child ->
             if (child is TerminalNodeImpl) {
@@ -1254,6 +1259,10 @@ class FormatterVisitor(val builder: StringBuilder) : SparkSqlParserBaseVisitor<V
                 builder.append(child.text)
             } else if (child is IntervalLiteralContext) {
                 visit(child.interval())
+            } else if (child is TypeConstructorContext) {
+                visit(child.identifier())
+                builder.append(" ")
+                visit(child.stringLit())
             } else {
                 visit(child)
             }
@@ -1307,8 +1316,8 @@ class FormatterVisitor(val builder: StringBuilder) : SparkSqlParserBaseVisitor<V
         if (ctx.DECIMAL_VALUE() != null) {
             builder.append(ctx.DECIMAL_VALUE().text)
         }
-        if (ctx.STRING() != null) {
-            builder.append(ctx.STRING().text)
+        if (ctx.stringLit() != null) {
+            builder.append(ctx.stringLit().text)
         }
 
         return null
@@ -1366,17 +1375,34 @@ class FormatterVisitor(val builder: StringBuilder) : SparkSqlParserBaseVisitor<V
         return null
     }
 
-    override fun visitDtPropertyKey(ctx: DtPropertyKeyContext): Void? {
-        iteratorChild(ctx.children, false, " ", "")
+    override fun visitDtColProperty(ctx: DtColPropertyContext): Void? {
+        visit(ctx.key)
+        builder.append(": ")
+        visit(ctx.value)
         return null
     }
 
     override fun visitDtPropertyValue(ctx: DtPropertyValueContext): Void? {
         if (ctx.LEFT_BRACKET() != null) {
             joinChild(ctx.dtPropertyValue(), "[", "]")
+            joinChild(ctx.columnDef(), "[", "]", ",\n" + INDENT  + INDENT)
         } else {
             builder.append(ctx.text)
         }
+        return null
+    }
+
+    override fun visitColumnDef(ctx: ColumnDefContext): Void? {
+        if (ctx.LEFT_BRACE() != null) {
+            joinChild(ctx.dtColProperty(), "{", "}", ", ")
+        } else {
+            builder.append(ctx.text)
+        }
+        return null
+    }
+
+    override fun visitDtPropertyKey(ctx: DtPropertyKeyContext): Void? {
+        iteratorChild(ctx.children, false, " ", "")
         return null
     }
 
@@ -1430,8 +1456,8 @@ class FormatterVisitor(val builder: StringBuilder) : SparkSqlParserBaseVisitor<V
     }
 
     override fun visitPropertyKey(ctx: PropertyKeyContext): Void? {
-        if (ctx.STRING() != null) {
-            builder.append(ctx.STRING().text)
+        if (ctx.stringLit() != null) {
+            builder.append(ctx.stringLit().text)
         } else {
             joinChild(ctx.identifier(), "", "", ".")
         }
@@ -1636,7 +1662,7 @@ class FormatterVisitor(val builder: StringBuilder) : SparkSqlParserBaseVisitor<V
         visit(ctx.createTableHeader())
         if (ctx.LEFT_PAREN() != null) {
             builder.append("(\n")
-            visit(ctx.colTypeList())
+            visit(ctx.createOrReplaceTableColTypeList())
         }
 
         if (ctx.RIGHT_PAREN() != null) {
@@ -1679,21 +1705,56 @@ class FormatterVisitor(val builder: StringBuilder) : SparkSqlParserBaseVisitor<V
         return null
     }
 
+    override fun visitCreateOrReplaceTableColTypeList(ctx: CreateOrReplaceTableColTypeListContext): Void? {
+        joinChild(ctx.createOrReplaceTableColType(), INDENT, "", ",\n" + INDENT)
+        return null
+    }
+
+    override fun visitCreateOrReplaceTableColType(ctx: CreateOrReplaceTableColTypeContext): Void? {
+        builder.append(ctx.colName.text)
+        if (ctx.dataType() != null) {
+            builder.append(" ").append(ctx.dataType().text)
+        }
+        joinChild(ctx.colDefinitionOption(), "", "", " ")
+        return null
+    }
+
+    override fun visitColDefinitionOption(ctx: ColDefinitionOptionContext): Void? {
+        if (ctx.NULL() != null) {
+            builder.append(" NOT NULL")
+        } else {
+            joinChild(ctx.children, "", "", " ")
+        }
+
+        return null
+    }
+
+    override fun visitDefaultExpression(ctx: DefaultExpressionContext): Void? {
+        builder.append("DEFAULT ")
+        visit(ctx.expression())
+        return null
+    }
+
+    override fun visitGenerationExpression(ctx: GenerationExpressionContext): Void? {
+        //GENERATED ALWAYS AS LEFT_PAREN expression RIGHT_PAREN
+        builder.append("GENERATED ALWAYS AS (")
+        visit(ctx.expression())
+        builder.append(")")
+        return null
+    }
+
     override fun visitColType(ctx: ColTypeContext): Void? {
         joinChild(ctx.children, "", "", " ")
         return null
     }
 
     override fun visitCreateTableClauses(ctx: CreateTableClausesContext): Void? {
-        if (ctx.primaryKeyExpr().size > 0) {
-            visit(ctx.primaryKeyExpr().get(0))
-        }
         if (ctx.PARTITIONED().size > 0) {
             builder.append("\nPARTITIONED BY ")
             joinChild(ctx.partitionFieldList())
         }
         if (ctx.locationSpec().size > 0) {
-            builder.append("\nLOCATION ").append(ctx.locationSpec().get(0).STRING().text)
+            builder.append("\nLOCATION ").append(ctx.locationSpec().get(0).stringLit().text)
         }
         if (ctx.LIFECYCLE().size > 0) {
             builder.append("\nLIFECYCLE ").append(ctx.lifecycle.text)
@@ -1714,15 +1775,6 @@ class FormatterVisitor(val builder: StringBuilder) : SparkSqlParserBaseVisitor<V
         return null
     }
 
-    override fun visitPrimaryKeyExpr(ctx: PrimaryKeyExprContext): Void? {
-        builder.append("\nPRIMARY KEY ")
-        joinChild(ctx.primaryColumnNames().errorCapturingIdentifier())
-        if (ctx.WITH() != null) {
-            builder.append(" WITH ").append(ctx.hudiType.text)
-        }
-        return null
-    }
-
     override fun visitUse(ctx: UseContext): Void? {
         builder.append("USE ")
         visit(ctx.multipartIdentifier())
@@ -1737,8 +1789,8 @@ class FormatterVisitor(val builder: StringBuilder) : SparkSqlParserBaseVisitor<V
 
     override fun visitSetCatalog(ctx: SetCatalogContext): Void? {
         builder.append("SET CATALOG ")
-        if (ctx.STRING() != null) {
-            builder.append(ctx.STRING().text)
+        if (ctx.stringLit() != null) {
+            builder.append(ctx.stringLit().text)
         } else {
             visit(ctx.identifier())
         }
@@ -1775,7 +1827,7 @@ class FormatterVisitor(val builder: StringBuilder) : SparkSqlParserBaseVisitor<V
             visit(ctx.commentSpec().get(0))
         }
         if (ctx.locationSpec().size > 0) {
-            builder.append("\nLOCATION ").append(ctx.locationSpec().get(0).STRING().text)
+            builder.append("\nLOCATION ").append(ctx.locationSpec().get(0).stringLit().text)
         }
         if (ctx.WITH().size > 0) {
             builder.append("\nWITH ")
@@ -1806,7 +1858,7 @@ class FormatterVisitor(val builder: StringBuilder) : SparkSqlParserBaseVisitor<V
         builder.append("ALTER ").append(ctx.namespace().text.uppercase()).append(" ")
         visit(ctx.multipartIdentifier())
         builder.append(" SET ")
-        builder.append("LOCATION ").append(ctx.locationSpec().STRING().text)
+        builder.append("LOCATION ").append(ctx.locationSpec().stringLit().text)
         return null
     }
 
@@ -1851,7 +1903,7 @@ class FormatterVisitor(val builder: StringBuilder) : SparkSqlParserBaseVisitor<V
         visit(ctx.replaceTableHeader())
         if (ctx.LEFT_PAREN() != null) {
             builder.append(" (\n")
-            visit(ctx.colTypeList())
+            visit(ctx.createOrReplaceTableColTypeList())
             builder.append("\n)")
         }
         if (ctx.tableProvider() != null) {
@@ -2319,7 +2371,7 @@ class FormatterVisitor(val builder: StringBuilder) : SparkSqlParserBaseVisitor<V
 
     override fun visitResource(ctx: ResourceContext): Void? {
         visit(ctx.identifier())
-        builder.append(" ").append(ctx.STRING().text)
+        builder.append(" ").append(ctx.stringLit().text)
         return null;
     }
 
@@ -2566,10 +2618,10 @@ class FormatterVisitor(val builder: StringBuilder) : SparkSqlParserBaseVisitor<V
         builder.append("COMMENT ON ").append(ctx.namespace().text).append(" ")
         visit(ctx.multipartIdentifier())
         builder.append(" IS ")
-        if (ctx.NULL() != null) {
+        if (ctx.comment().NULL() != null) {
             builder.append("NULL")
         } else {
-            builder.append(ctx.comment.text)
+            builder.append(ctx.comment().stringLit().text)
         }
         return null
     }
@@ -2578,10 +2630,10 @@ class FormatterVisitor(val builder: StringBuilder) : SparkSqlParserBaseVisitor<V
         builder.append("COMMENT ON TABLE ")
         visit(ctx.multipartIdentifier())
         builder.append(" IS ")
-        if (ctx.NULL() != null) {
+        if (ctx.comment().NULL() != null) {
             builder.append("NULL")
         } else {
-            builder.append(ctx.comment.text)
+            builder.append(ctx.comment().stringLit().text)
         }
         return null
     }
@@ -2593,6 +2645,60 @@ class FormatterVisitor(val builder: StringBuilder) : SparkSqlParserBaseVisitor<V
 
     override fun visitRepairTable(ctx: RepairTableContext): Void? {
         joinChildren(ctx.children)
+        return null
+    }
+
+    override fun visitCreateIndex(ctx: CreateIndexContext): Void? {
+        builder.append("CREATE INDEX ")
+        if (ctx.EXISTS() != null) {
+            builder.append("IF NOT EXISTS ")
+        }
+        joinChild(ctx.identifier(), "", "", ".")
+        builder.append(" ON ")
+        if (ctx.TABLE() != null) {
+            builder.append("TABLE ")
+        }
+        visit(ctx.multipartIdentifier())
+        builder.append("\n")
+
+        indent++
+        if (ctx.USING() != null) {
+            builder.append("USING ")
+            builder.append(ctx.indexType.text)
+        }
+        if (ctx.columns.multipartIdentifierProperty().size == 1) {
+            joinChild(ctx.columns.multipartIdentifierProperty(), "(", ")", "")
+        } else {
+            joinChild(ctx.columns.multipartIdentifierProperty(), "(\n" + INDENT, "\n)", ",\n" + INDENT)
+        }
+
+        if (ctx.OPTIONS() != null) {
+            builder.append("\nOPTIONS ")
+            visit(ctx.options)
+        }
+        return null
+    }
+
+    override fun visitMultipartIdentifierProperty(ctx: MultipartIdentifierPropertyContext): Void? {
+        visit(ctx.multipartIdentifier())
+        if (ctx.OPTIONS() != null) {
+            builder.append(" OPTIONS ")
+            joinChild(ctx.propertyList().property(), "(", ")", ", ")
+        }
+        return null
+    }
+
+    override fun visitDropIndex(ctx: DropIndexContext): Void? {
+        builder.append("DROP INDEX ")
+        if (ctx.EXISTS() != null) {
+            builder.append("IF EXISTS ")
+        }
+        visit(ctx.identifier())
+        builder.append(" ON ")
+        if (ctx.TABLE() != null) {
+            builder.append("TABLE ")
+        }
+        visit(ctx.multipartIdentifier())
         return null
     }
 

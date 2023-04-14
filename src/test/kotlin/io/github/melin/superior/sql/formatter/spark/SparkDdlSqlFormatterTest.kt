@@ -45,11 +45,10 @@ class SparkDdlSqlFormatterTest {
         val sql = """
             create table test_hudi_demo ( 
                 id int, 
-                name string, 
+                name string not null  default 'test' comment  'sd', 
                 price double,
                 ds string)
             using hudi    
-            primary key (id)
             partitioned by (ds)
             COMMENT 'this is a comment'
             TBLPROPERTIES ('foo'='bar')
@@ -59,12 +58,11 @@ class SparkDdlSqlFormatterTest {
         val expected = """
             |CREATE TABLE test_hudi_demo (
             |  id int,
-            |  name string,
+            |  name string NOT NULL DEFAULT 'test' COMMENT 'sd',
             |  price double,
             |  ds string
             |)
             |USING hudi
-            |PRIMARY KEY (id)
             |PARTITIONED BY (ds)
             |LIFECYCLE 300
             |TBLPROPERTIES (
@@ -535,6 +533,73 @@ class SparkDdlSqlFormatterTest {
         val formatSql = SparkSqlFormatter.formatSql(sql)
         val expected = """
             |DROP TABLE IF EXISTS employeetable
+        """.trimMargin()
+        Assert.assertEquals(expected, formatSql)
+    }
+
+    @Test
+    fun createIndexTest0() {
+        val sql = """
+            CREATE index i1 ON a.b.c USING BTREE (col1)
+        """.trimIndent()
+        val formatSql = SparkSqlFormatter.formatSql(sql)
+        val expected = """
+            |CREATE INDEX i1.BTREE ON a.b.c
+            |USING BTREE(col1)
+        """.trimMargin()
+        Assert.assertEquals(expected, formatSql)
+    }
+
+    @Test
+    fun createIndexTest1() {
+        val sql = """
+            CREATE index IF NOT EXISTS i1 ON TABLE a.b.c USING BTREE (
+                col1 OPTIONS ('k1'='v1'), 
+                col2 OPTIONS ('k2'='v2')
+            ) OPTIONS ('k3'='v3', 'k4'='v4')
+        """.trimIndent()
+        val formatSql = SparkSqlFormatter.formatSql(sql)
+        val expected = """
+            |CREATE INDEX IF NOT EXISTS i1.BTREE ON TABLE a.b.c
+            |USING BTREE(
+            |  col1 OPTIONS ('k1' = 'v1'),
+            |  col2 OPTIONS ('k2' = 'v2')
+            |)
+            |OPTIONS (
+            |  'k3' = 'v3',
+            |  'k4' = 'v4'
+            |)
+        """.trimMargin()
+        Assert.assertEquals(expected, formatSql)
+    }
+
+    @Test
+    fun createIndexTest2() {
+        val sql = """
+            CREATE index IF NOT EXISTS i1 ON a.b.c (
+                col1 OPTIONS ('k1'='v1'), 
+                col2 OPTIONS ('k2'='v2')
+            ) 
+        """.trimIndent()
+        val formatSql = SparkSqlFormatter.formatSql(sql)
+        val expected = """
+            |CREATE INDEX IF NOT EXISTS i1 ON a.b.c
+            |(
+            |  col1 OPTIONS ('k1' = 'v1'),
+            |  col2 OPTIONS ('k2' = 'v2')
+            |)
+        """.trimMargin()
+        Assert.assertEquals(expected, formatSql)
+    }
+
+    @Test
+    fun dropIndexTest() {
+        val sql = """
+            DROP index IF EXISTS test_index ON TABLE bigdata.demo
+        """.trimIndent()
+        val formatSql = SparkSqlFormatter.formatSql(sql)
+        val expected = """
+            |DROP INDEX IF EXISTS test_index ON TABLE bigdata.demo
         """.trimMargin()
         Assert.assertEquals(expected, formatSql)
     }
