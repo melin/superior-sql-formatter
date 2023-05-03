@@ -1356,7 +1356,7 @@ class FormatterVisitor(val builder: StringBuilder) : SparkSqlParserBaseVisitor<V
         return null
     }
 
-    override fun visitDtunnelExpr(ctx: DtunnelExprContext): Void? {
+    override fun visitDatatunnelExpr(ctx: DatatunnelExprContext): Void? {
         builder.append("DATATUNNEL SOURCE(").append(ctx.srcName.text).append(") OPTIONS ")
         joinChild(ctx.readOpts.dtProperty(), "(\n" + INDENT, "\n)", ",\n" + INDENT)
         builder.append("\n")
@@ -1365,6 +1365,14 @@ class FormatterVisitor(val builder: StringBuilder) : SparkSqlParserBaseVisitor<V
         }
         builder.append("SINK(").append(ctx.distName.text).append(") OPTIONS ")
         joinChild(ctx.writeOpts.dtProperty(), "(\n" + INDENT, "\n)", ",\n" + INDENT)
+        return null
+    }
+
+    override fun visitDatatunnelHelp(ctx: DatatunnelHelpContext): Void? {
+        builder.append("DATATUNNEL HELP ").append(ctx.type.text.uppercase())
+        builder.append("(")
+        builder.append(ctx.value.text)
+        builder.append(")")
         return null
     }
 
@@ -1439,12 +1447,23 @@ class FormatterVisitor(val builder: StringBuilder) : SparkSqlParserBaseVisitor<V
         return null
     }
 
-    override fun visitLoadTempTable(ctx: LoadTempTableContext): Void? {
-        builder.append("LOAD DATA ").append(ctx.path.text).append(" ")
+    override fun visitCreateFileView(ctx: CreateFileViewContext): Void? {
+        builder.append("CREATE VIEW ")
         visit(ctx.multipartIdentifier())
+        builder.append("\n")
+        builder.append(ctx.fileMode.text.uppercase()).append(" ")
+        builder.append(ctx.path.text)
+
         if (ctx.OPTIONS() != null) {
-            builder.append(" OPTIONS")
+            builder.append("\nOPTIONS")
             visit(ctx.propertyList())
+        }
+
+        if (ctx.FILEFORMAT() != null) {
+            builder.append("\nFILEFORMAT ").append(ctx.fileformatName.text)
+        }
+        if (ctx.COMPRESSION() != null) {
+            builder.append("\nCOMPRESSION ").append(ctx.compressionName.text)
         }
         return null
     }

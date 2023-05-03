@@ -226,16 +226,21 @@ statement
     | DROP INDEX (IF EXISTS)? identifier ON TABLE? multipartIdentifier #dropIndex
 
     | MERGE TABLE multipartIdentifier partitionSpec?
-            (OPTIONS options=propertyList)?                            #mergeTable
-    | LOAD DATA path=STRING TABLE multipartIdentifier
-        (OPTIONS options=propertyList)?                                #loadTempTable
+        (OPTIONS options=propertyList)?                                #mergeTable
+    | CREATE VIEW multipartIdentifier fileMode=(FILES|PATTERN) path=STRING
+        (OPTIONS options=propertyList)?
+        (FILEFORMAT fileformatName = identifier)?
+        (COMPRESSION compressionName = identifier)?                    #createFileView
+
     | ctes? EXPORT TABLE multipartIdentifier partitionSpec?
         TO name=STRING (OPTIONS options=propertyList)?                 #exportTable
     | ctes? DATATUNNEL SOURCE LEFT_PAREN srcName=stringLit RIGHT_PAREN OPTIONS
         readOpts=dtPropertyList
         (TRANSFORM EQ transfromSql=stringLit)?
         SINK LEFT_PAREN distName=stringLit RIGHT_PAREN
-        (OPTIONS writeOpts=dtPropertyList)?                            #dtunnelExpr
+        (OPTIONS writeOpts=dtPropertyList)?                            #datatunnelExpr
+    | DATATUNNEL HELP type=(SOURCE | SINK | ALL)
+            LEFT_PAREN value=stringLit RIGHT_PAREN                     #datatunnelHelp
     | CALL multipartIdentifier
         LEFT_PAREN (callArgument (COMMA callArgument)*)? RIGHT_PAREN   #call
     | SYNC type=(SCHEMA|TABLE) target=multipartIdentifier FROM source=multipartIdentifier
@@ -1273,6 +1278,7 @@ ansiNonReserved
     | COMMIT
     | COMPACT
     | COMPACTIONS
+    | COMPRESSION
     | COMPUTE
     | CONCATENATE
     | COST
@@ -1310,6 +1316,7 @@ ansiNonReserved
     | EXTRACT
     | FIELDS
     | FILEFORMAT
+    | FILES
     | FIRST
     | FOLLOWING
     | FORMAT
@@ -1319,6 +1326,7 @@ ansiNonReserved
     | GENERATED
     | GLOBAL
     | GROUPING
+    | HELP
     | HOUR
     | HOURS
     | IF
@@ -1376,6 +1384,7 @@ ansiNonReserved
     | PARTITION
     | PARTITIONED
     | PARTITIONS
+    | PATTERN
     | PERCENTLIT
     | PIVOT
     | PLACING
@@ -1547,6 +1556,7 @@ nonReserved
     | COMMIT
     | COMPACT
     | COMPACTIONS
+    | COMPRESSION
     | COMPUTE
     | CONCATENATE
     | CONSTRAINT
@@ -1597,6 +1607,7 @@ nonReserved
     | FILTER
     | FIELDS
     | FILEFORMAT
+    | FILES
     | FIRST
     | FOLLOWING
     | FOR
@@ -1612,6 +1623,7 @@ nonReserved
     | GROUP
     | GROUPING
     | HAVING
+    | HELP
     | HOUR
     | HOURS
     | IF
@@ -1681,6 +1693,7 @@ nonReserved
     | PARTITION
     | PARTITIONED
     | PARTITIONS
+    | PATTERN
     | PERCENTILE_CONT
     | PERCENTILE_DISC
     | PERCENTLIT

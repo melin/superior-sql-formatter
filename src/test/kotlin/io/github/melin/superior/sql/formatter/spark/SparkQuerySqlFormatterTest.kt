@@ -41,7 +41,8 @@ class SparkQuerySqlFormatterTest {
 
     @Test
     fun simpleSelectSqlTest2() {
-        val sql = "select (date '2022-12-12') as test, CURRENT_DATE, name from demo where not name = 'ss' and id>100 sort by name, age"
+        val sql =
+            "select (date '2022-12-12') as test, CURRENT_DATE, name from demo where not name = 'ss' and id>100 sort by name, age"
         val formatSql = SparkSqlFormatter.formatSql(sql)
         val expected = """
             |SELECT
@@ -208,8 +209,9 @@ class SparkQuerySqlFormatterTest {
 
     @Test
     fun simpleSelectGroupSqlTest1() {
-        val sql = "SELECT id, sum(quantity) filter (WHERE car_model IN ('Honda Civic', 'Honda CRV')) AS `sum(quantity)` " +
-                "FROM dealer GROUP BY id ORDER BY id;"
+        val sql =
+            "SELECT id, sum(quantity) filter (WHERE car_model IN ('Honda Civic', 'Honda CRV')) AS `sum(quantity)` " +
+                    "FROM dealer GROUP BY id ORDER BY id;"
         val formatSql = SparkSqlFormatter.formatSql(sql)
         val expected = """
             |SELECT
@@ -934,6 +936,19 @@ class SparkQuerySqlFormatterTest {
     }
 
     @Test
+    fun datatunnelHelpSqlTest() {
+        val sql = """
+            |datatunnel help all ("clickhouse")
+        """.trimMargin()
+
+        val formatSql = SparkSqlFormatter.formatSql(sql)
+        val expected = """
+            |DATATUNNEL HELP ALL("clickhouse")
+        """.trimMargin()
+        Assert.assertEquals(expected, formatSql)
+    }
+
+    @Test
     fun exportSqlTest1() {
         val sql = """
             export table raw_activity_flat PARTITION (year=2018, month=3, day=12) TO 'activity_20180312.csv' options(delimiter=';')
@@ -974,16 +989,21 @@ class SparkQuerySqlFormatterTest {
     }
 
     @Test
-    fun loadFileSqlTest1() {
+    fun createFileViewSqlTest1() {
         val sql = """
-            load data '/user/dataworks/users/qianxiao/demo.csv' table tdl_spark_test options( delimiter=',',header='true');
+            create view tdl_spark_test Files '/user/dataworks/users/qianxiao/demo.csv' Options( delimiter=',',header='true')
+            FILEFORMAT  csv COMPRESSION gz;
         """.trimIndent()
         val formatSql = SparkSqlFormatter.formatSql(sql)
         val expected = """
-            |LOAD DATA '/user/dataworks/users/qianxiao/demo.csv' tdl_spark_test OPTIONS(
+            |CREATE VIEW tdl_spark_test
+            |FILES '/user/dataworks/users/qianxiao/demo.csv'
+            |OPTIONS(
             |  delimiter = ',',
             |  header = 'true'
             |)
+            |FILEFORMAT csv
+            |COMPRESSION gz
         """.trimMargin()
         Assert.assertEquals(expected, formatSql)
     }
