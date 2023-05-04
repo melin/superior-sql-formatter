@@ -1357,13 +1357,13 @@ class FormatterVisitor(val builder: StringBuilder) : SparkSqlParserBaseVisitor<V
     }
 
     override fun visitDatatunnelExpr(ctx: DatatunnelExprContext): Void? {
-        builder.append("DATATUNNEL SOURCE(").append(ctx.srcName.text).append(") OPTIONS ")
+        builder.append("DATATUNNEL SOURCE(").append(ctx.sourceName.text).append(") OPTIONS ")
         joinChild(ctx.readOpts.dtProperty(), "(\n" + INDENT, "\n)", ",\n" + INDENT)
         builder.append("\n")
         if (ctx.TRANSFORM() != null) {
             builder.append("TRANSFORM = ").append(ctx.transfromSql.text).append("\n");
         }
-        builder.append("SINK(").append(ctx.distName.text).append(") OPTIONS ")
+        builder.append("SINK(").append(ctx.sinkName.text).append(") OPTIONS ")
         joinChild(ctx.writeOpts.dtProperty(), "(\n" + INDENT, "\n)", ",\n" + INDENT)
         return null
     }
@@ -1430,14 +1430,33 @@ class FormatterVisitor(val builder: StringBuilder) : SparkSqlParserBaseVisitor<V
         if (ctx.partitionSpec() != null) {
             builder.append(" ")
             visit(ctx.partitionSpec())
-            builder.append("\nTO ").append(ctx.name.text)
+            builder.append("\nTO ").append(ctx.filePath.text)
         } else {
-            builder.append(" TO ").append(ctx.name.text)
+            builder.append(" TO ").append(ctx.filePath.text)
         }
 
         if (ctx.OPTIONS() != null) {
             builder.append(" OPTIONS")
             visit(ctx.propertyList())
+        }
+
+        val causes = ctx.exportTableClauses()
+        if (causes != null) {
+            if (causes.fileformatName != null) {
+                builder.append("\nFORMAT ").append(causes.fileformatName.text)
+            }
+            if (causes.compressionName != null) {
+                builder.append("\nCOMPRESSION ").append(causes.compressionName.text)
+            }
+            if (causes.single != null) {
+                builder.append("\nSINGLE ").append(causes.single.text)
+            }
+            if (causes.maxfilesize != null) {
+                builder.append("\nMAX_FILE_SIZE ").append(causes.maxfilesize.text)
+            }
+            if (causes.overwrite != null) {
+                builder.append("\nOVERWRITE ").append(causes.overwrite.text)
+            }
         }
         return null
     }
@@ -1459,11 +1478,17 @@ class FormatterVisitor(val builder: StringBuilder) : SparkSqlParserBaseVisitor<V
             visit(ctx.propertyList())
         }
 
-        if (ctx.FILEFORMAT() != null) {
-            builder.append("\nFILEFORMAT ").append(ctx.fileformatName.text)
-        }
-        if (ctx.COMPRESSION() != null) {
-            builder.append("\nCOMPRESSION ").append(ctx.compressionName.text)
+        val causes = ctx.createFileViewClauses()
+        if (causes != null) {
+            if (causes.fileformatName != null) {
+                builder.append("\nFORMAT ").append(causes.fileformatName.text)
+            }
+            if (causes.compressionName != null) {
+                builder.append("\nCOMPRESSION ").append(causes.compressionName.text)
+            }
+            if (causes.sizelimit != null) {
+                builder.append("\nSIZE_LIMIT ").append(causes.sizelimit.text)
+            }
         }
         return null
     }

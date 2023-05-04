@@ -992,7 +992,7 @@ class SparkQuerySqlFormatterTest {
     fun createFileViewSqlTest1() {
         val sql = """
             create view tdl_spark_test Files '/user/dataworks/users/qianxiao/demo.csv' Options( delimiter=',',header='true')
-            FILEFORMAT  csv COMPRESSION gz;
+            FORMAT csv COMPRESSION gz;
         """.trimIndent()
         val formatSql = SparkSqlFormatter.formatSql(sql)
         val expected = """
@@ -1002,8 +1002,25 @@ class SparkQuerySqlFormatterTest {
             |  delimiter = ',',
             |  header = 'true'
             |)
-            |FILEFORMAT csv
+            |FORMAT csv
             |COMPRESSION gz
+        """.trimMargin()
+        Assert.assertEquals(expected, formatSql)
+    }
+
+    @Test
+    fun createFileViewSqlTest2() {
+        val sql = """
+            create view tdl_spark_test Files '/user/dataworks/users/qianxiao/demo.csv' Options( delimiter=',',header='true');
+        """.trimIndent()
+        val formatSql = SparkSqlFormatter.formatSql(sql)
+        val expected = """
+            |CREATE VIEW tdl_spark_test
+            |FILES '/user/dataworks/users/qianxiao/demo.csv'
+            |OPTIONS(
+            |  delimiter = ',',
+            |  header = 'true'
+            |)
         """.trimMargin()
         Assert.assertEquals(expected, formatSql)
     }

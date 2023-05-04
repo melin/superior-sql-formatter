@@ -172,21 +172,21 @@ statement
     | EXPLAIN (LOGICAL | FORMATTED | EXTENDED | CODEGEN | COST)?
         statement                                                      #explain
     | SHOW TABLES ((FROM | IN) multipartIdentifier)?
-        (LIKE? pattern=stringLit)?                                        #showTables
+        (LIKE? pattern=stringLit)?                                     #showTables
     | SHOW TABLE EXTENDED ((FROM | IN) ns=multipartIdentifier)?
-        LIKE pattern=stringLit partitionSpec?                             #showTableExtended
+        LIKE pattern=stringLit partitionSpec?                          #showTableExtended
     | SHOW TBLPROPERTIES table=multipartIdentifier
         (LEFT_PAREN key=propertyKey RIGHT_PAREN)?                      #showTblProperties
     | SHOW COLUMNS (FROM | IN) table=multipartIdentifier
         ((FROM | IN) ns=multipartIdentifier)?                          #showColumns
     | SHOW VIEWS ((FROM | IN) multipartIdentifier)?
-        (LIKE? pattern=stringLit)?                                        #showViews
+        (LIKE? pattern=stringLit)?                                     #showViews
     | SHOW PARTITIONS multipartIdentifier partitionSpec?               #showPartitions
     | SHOW identifier? FUNCTIONS ((FROM | IN) ns=multipartIdentifier)?
-        (LIKE? (legacy=multipartIdentifier | pattern=stringLit))?         #showFunctions
+        (LIKE? (legacy=multipartIdentifier | pattern=stringLit))?      #showFunctions
     | SHOW CREATE TABLE multipartIdentifier (AS SERDE)?                #showCreateTable
     | SHOW CURRENT namespace                                           #showCurrentNamespace
-    | SHOW CATALOGS (LIKE? pattern=stringLit)?                            #showCatalogs
+    | SHOW CATALOGS (LIKE? pattern=stringLit)?                         #showCatalogs
     | (DESC | DESCRIBE) FUNCTION EXTENDED? describeFuncName            #describeFunction
     | (DESC | DESCRIBE) namespace EXTENDED?
         multipartIdentifier                                            #describeNamespace
@@ -226,21 +226,24 @@ statement
     | DROP INDEX (IF EXISTS)? identifier ON TABLE? multipartIdentifier #dropIndex
 
     | MERGE TABLE multipartIdentifier partitionSpec?
-        (OPTIONS options=propertyList)?                                #mergeTable
+        (OPTIONS options=propertyList)?                                #mergeFile
+
     | CREATE VIEW multipartIdentifier fileMode=(FILES|PATTERN) path=STRING
         (OPTIONS options=propertyList)?
-        (FILEFORMAT fileformatName = identifier)?
-        (COMPRESSION compressionName = identifier)?                    #createFileView
-
+        createFileViewClauses                                          #createFileView
     | ctes? EXPORT TABLE multipartIdentifier partitionSpec?
-        TO name=STRING (OPTIONS options=propertyList)?                 #exportTable
-    | ctes? DATATUNNEL SOURCE LEFT_PAREN srcName=stringLit RIGHT_PAREN OPTIONS
+        TO filePath=STRING
+        (OPTIONS options=propertyList)?
+        exportTableClauses                                             #exportTable
+
+    | ctes? DATATUNNEL SOURCE LEFT_PAREN sourceName=stringLit RIGHT_PAREN OPTIONS
         readOpts=dtPropertyList
         (TRANSFORM EQ transfromSql=stringLit)?
-        SINK LEFT_PAREN distName=stringLit RIGHT_PAREN
+        SINK LEFT_PAREN sinkName=stringLit RIGHT_PAREN
         (OPTIONS writeOpts=dtPropertyList)?                            #datatunnelExpr
+
     | DATATUNNEL HELP type=(SOURCE | SINK | ALL)
-            LEFT_PAREN value=stringLit RIGHT_PAREN                     #datatunnelHelp
+        LEFT_PAREN value=stringLit RIGHT_PAREN                         #datatunnelHelp
     | CALL multipartIdentifier
         LEFT_PAREN (callArgument (COMMA callArgument)*)? RIGHT_PAREN   #call
     | SYNC type=(SCHEMA|TABLE) target=multipartIdentifier FROM source=multipartIdentifier
@@ -297,6 +300,20 @@ dtPropertyValue
     | STRING
     | LEFT_BRACKET dtPropertyValue (',' dtPropertyValue)* RIGHT_BRACKET
     | LEFT_BRACKET columnDef (COMMA columnDef)* RIGHT_BRACKET
+    ;
+
+createFileViewClauses
+    : ((FORMAT fileformatName = identifier) |
+      (COMPRESSION compressionName = identifier) |
+      (SIZE_LIMIT sizelimit = identifier))*
+    ;
+
+exportTableClauses
+    : ((FORMAT fileformatName = identifier) |
+      (COMPRESSION compressionName = identifier) |
+      (OVERWRITE overwrite = booleanValue) |
+      (MAX_FILE_SIZE maxfilesize = identifier) |
+      (SINGLE single = booleanValue))*
     ;
 
 unsupportedHiveNativeCommands
@@ -1326,9 +1343,9 @@ ansiNonReserved
     | GENERATED
     | GLOBAL
     | GROUPING
-    | HELP
     | HOUR
     | HOURS
+    | HELP
     | IF
     | IGNORE
     | IMPORT
@@ -1483,6 +1500,9 @@ ansiNonReserved
     | SINK
     | CALL
     | OWNER
+    | SIZE_LIMIT
+    | SINGLE
+    | MAX_FILE_SIZE
 //--ANSI-NON-RESERVED-END
     ;
 
@@ -1623,9 +1643,9 @@ nonReserved
     | GROUP
     | GROUPING
     | HAVING
-    | HELP
     | HOUR
     | HOURS
+    | HELP
     | IF
     | IGNORE
     | IMPORT
@@ -1809,5 +1829,8 @@ nonReserved
     | SINK
     | CALL
     | OWNER
+    | SIZE_LIMIT
+    | SINGLE
+    | MAX_FILE_SIZE
 //--DEFAULT-NON-RESERVED-END
     ;
