@@ -1648,6 +1648,21 @@ class FormatterVisitor(val builder: StringBuilder) : SparkSqlParserBaseVisitor<V
         return null
     }
 
+    override fun visitMergeFile(ctx: MergeFileContext): Void? {
+        builder.append("MERGE INTO ")
+        visit(ctx.multipartIdentifier())
+        builder.append(" ")
+        if (ctx.partitionSpec() != null) {
+            visit(ctx.partitionSpec())
+        }
+        if (ctx.options != null) {
+            builder.append("\nOPTIONS")
+            joinChild(ctx.options.property(), "(\n" + INDENT, "\n)", ",\n" + INDENT)
+        }
+
+        return null;
+    }
+
     override fun visitMatchedClause(ctx: MatchedClauseContext): Void? {
         builder.append("\nWHEN MATCHED ")
         if (ctx.matchedCond != null) {

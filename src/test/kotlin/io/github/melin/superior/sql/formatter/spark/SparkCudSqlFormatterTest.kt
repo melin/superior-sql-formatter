@@ -120,6 +120,22 @@ class SparkCudSqlFormatterTest {
     }
 
     @Test
+    fun mergTableFileTest() {
+        val sql = """
+            merge table bigdata.test_user11_dt PARTITION (ds=20211204) options(dd='ss', ssd=12)
+        """.trimIndent()
+        val formatSql = SparkSqlFormatter.formatSql(sql)
+        val expected = """
+            |MERGE INTO bigdata.test_user11_dt PARTITION(ds = 20211204)
+            |OPTIONS(
+            |  dd = 'ss',
+            |  ssd = 12
+            |)
+        """.trimMargin()
+        Assert.assertEquals(expected, formatSql)
+    }
+
+    @Test
     fun insertTableSqlTest7() {
         val sql = """
             INSERT OVERWRITE students PARTITION (student_id = 222222)
